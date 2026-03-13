@@ -2,6 +2,7 @@ import numpy as np
 import random, math
 from dataprocessing import DataProcessing
 from functions import Functions
+from tree_utils import HuffmanTree
 
 
 # class to implement the skip-gram model
@@ -28,13 +29,12 @@ class SkipGram:
         self.y_pred = Functions.softmax(self.u)
         return self.y_pred
     
-    def backpropagation(self, input_vector_id, context_vectors):
+    def backpropagation(self, input_vector_id, context_vectors_ids, context_size):
         #calculate the error
 
-        EI = np.zeros(self.V)
+        EI = context_size * self.y_pred
 
-        for target_vector in context_vectors:
-            EI += self.y_pred - target_vector
+        np.add.at(EI, context_vectors_ids, -1)
 
         EH = np.dot(self.W2, EI)
 
@@ -48,14 +48,78 @@ class SkipGram:
             for i in range(self.data_processing.data_length):
 
                 input_vector_id = self.data_processing.data_id_to_word_id(i)
-                context_vectors = self.data_processing.one_hot_encoding_context_list(i, self.context_size)
+                context_vectors_ids, context_size = self.data_processing.one_hot_encoding_context_ids(i, self.context_size)
 
                 predicted_vector = self.forward_pass(input_vector_id)
 
-                self.backpropagation(input_vector_id, context_vectors)
+                self.backpropagation(input_vector_id, context_vectors_ids, context_size)
 
-                for target_vector in context_vectors:
-                    total_loss += -np.sum(target_vector * np.log(predicted_vector))
+                total_loss += -np.sum(np.log(predicted_vector[context_vectors_ids] + 1e-9))
 
             average_loss = total_loss / self.data_processing.data_length
+            print(f"Epoch {epoch + 1}/{epochs} | Average Loss: {average_loss:.4f}")
+
+
+# class to implement the skip-gram model
+class SkipGramHierarchical:
+    
+    def __init__(self, data_path, context_size, learning_rate, hidden_layer_size):
+        self.context_size = context_size
+        self.learning_rate = learning_rate
+        self.data_processing = DataProcessing()
+        self.data_processing.load(data_path)
+        #size of the vocabulary
+        self.V = len(self.data_processing.vocabulary)
+        #size of hidden layer
+        self.N = hidden_layer_size
+        self.W1 = np.random.uniform(-0.1, 0.1, size=(self.V, self.N))
+        self.W2 = np.random.uniform(-0.1, 0.1, size=(self.V-1, self.N))
+    
+    def update_weights(self, input_vector_id, context_words, huffman_dict):
+
+        h = self.W1[input_vector_id]
+        
+        EH = np.zeros(self.N)
+
+        loss = 0
+
+        for target_word in context_words:
+            node = huffman_dict[target_word]
+            code = np.array(node['code'])
+            path = node['path']
+
+            v = self.W2[path]
+            f = Functions.sigmoid(code * np.dot(v, h))
+
+            loss -= np.sum(np.log(f + 1e-9))
+            
+            gradient = code * (f - 1)
+
+            EH += np.dot(gradient, v)
+
+            self.W2[path] -= self.learning_rate * np.outer(gradient, h)
+    
+        self.W1[input_vector_id] -= self.learning_rate * EH
+
+        return loss
+
+    def train(self, epochs):
+
+        huffman_tree = HuffmanTree(self.data_processing.vocabulary, self.data_processing.vocabulary_frequency)
+        huffman_dict = huffman_tree.convert_tree_to_dict(huffman_tree.root)
+
+        for epoch in range(epochs):
+
+            epoch_loss = 0
+
+            for i in range(self.data_processing.data_length):
+
+                input_vector_id = self.data_processing.data_id_to_word_id(i)
+                context_words, context_size = self.data_processing.one_hot_encoding_context_words(i, self.context_size)
+
+                loss = self.update_weights(input_vector_id, context_words, huffman_dict)
+
+                epoch_loss += loss
+
+            average_loss = epoch_loss / self.data_processing.data_length
             print(f"Epoch {epoch + 1}/{epochs} | Average Loss: {average_loss:.4f}")

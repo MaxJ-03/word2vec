@@ -72,6 +72,23 @@ class DataProcessing:
         context_vectors = [self.one_hot_encoding(word) for word in window_words]
         actual_context_size = len(context_vectors)
         return context_vectors
+
+    def one_hot_encoding_context_ids(self, id, context_size):
+        #one hot encode the words in the window
+        start = max(0, id - math.floor(context_size / 2))
+        end = min(self.data_length, id + math.ceil(context_size / 2) + 1)
+        window_words = self.tokenized_data[start:id] + self.tokenized_data[id+1:end]
+        context_vector_ids = [self.word_to_id[word] for word in window_words]
+        actual_context_size = len(context_vector_ids)
+        return context_vector_ids, actual_context_size
+    
+    def one_hot_encoding_context_words(self, id, context_size):
+        #one hot encode the words in the window
+        start = max(0, id - math.floor(context_size / 2))
+        end = min(self.data_length, id + math.ceil(context_size / 2) + 1)
+        window_words = self.tokenized_data[start:id] + self.tokenized_data[id+1:end]
+        actual_context_size = len(window_words)
+        return window_words, actual_context_size
     
     def one_hot_encoding_to_word(self, one_hot_vector):
         #convert one hot vector back to word

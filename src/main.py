@@ -1,7 +1,7 @@
 import os
 import numpy as np
-from skipGram import SkipGram
-from CBOW import CBOW
+from skipGram import SkipGram, SkipGramHierarchical
+from CBOW import CBOW, CBOWHierarchical
 from functions import Functions
 
 if __name__ == "__main__":
@@ -15,7 +15,7 @@ if __name__ == "__main__":
     EPOCHS = 50
 
     # 3. Instantiate the model
-    model = CBOW(
+    model = SkipGramHierarchical(
         data_path=test_file_path, 
         context_size=CONTEXT_SIZE, 
         learning_rate=LEARNING_RATE, 
