@@ -1,8 +1,14 @@
 import os
-import time  # 1. Import the time module
+import time
 import numpy as np
-from skipGram import SkipGram, SkipGramHierarchical, SkipGramNegativeSampling
-from CBOW import CBOW, CBOWHierarchical, CBOWNegativeSampling
+from skip_gram.skip_gram_neg_sample import SkipGramNegativeSampling
+from skip_gram.skip_gram import SkipGram
+from skip_gram.skip_gram_hier_softmax import SkipGramHierarchical
+
+from cbow.cbow import CBOW
+from cbow.cbow_neg_sample import CBOWNegativeSampling
+from cbow.cbow_hier_softmax import CBOWHierarchical
+
 from evaluation import get_similar_words
 
 
@@ -17,7 +23,7 @@ if __name__ == "__main__":
     EPOCHS = 50
 
     # 3. Instantiate the model
-    model = CBOWNegativeSampling(
+    model = CBOW(
         data_path=test_file_path, 
         context_size=CONTEXT_SIZE, 
         learning_rate=LEARNING_RATE, 
