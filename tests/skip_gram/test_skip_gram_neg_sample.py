@@ -23,6 +23,7 @@ class TestSkipGramNegativeSampling(unittest.TestCase):
 
     @patch('data_proc.DataProcessing.generate_negative_samples_list')
     def test_weight_update_math(self, mock_neg_samples_list):
+        # Validates loss calculations and weight updates for the true context words and generated negative samples
         mock_neg_samples_list.return_value = [3, 4]
 
         model = SkipGramNegativeSampling(self.test_file, self.context_size, self.learning_rate, self.N, negative_sampling_size=2)
@@ -30,14 +31,26 @@ class TestSkipGramNegativeSampling(unittest.TestCase):
         model.W1 = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3], [0.4, 0.4], [0.5, 0.5]])
         model.W2 = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3], [0.4, 0.4], [0.5, 0.5]])
 
-        # Input: 'b' (1). Context: 'a' (0), 'c' (2)
-        f_true = Functions.sigmoid(np.array([0.04, 0.12])) # h=[0.2, 0.2] dot v_true=[[0.1,0.1], [0.3,0.3]]
+        f_true = Functions.sigmoid(np.array([0.04, 0.12]))
         loss_true = -np.sum(np.log(f_true + 1e-9))
 
-        f_neg = Functions.sigmoid(np.array([0.16, 0.20])) # h dot negatives [3, 4]
+        f_neg = Functions.sigmoid(np.array([0.16, 0.20]))
         loss_neg = -np.sum(np.log(1 - f_neg + 1e-9))
 
         expected_loss = loss_true + loss_neg
         actual_loss = model.update_weights(input_vector_id=1, context_vector_ids=[0, 2])
         
-        self.assertAlmostEqual(actual_loss, expected_loss, places=5, msg="SkipGram NS math failed!")
+        self.assertAlmostEqual(actual_loss, expected_loss, places=5)
+
+    def test_train_execution(self):
+        # Ensures the full training loop executes without runtime or dimension errors
+        model = SkipGramNegativeSampling(self.test_file, self.context_size, self.learning_rate, self.N, negative_sampling_size=2)
+        
+        try:
+            model.train(epochs=1, print_interval=10)
+            execution_successful = True
+        except Exception as e:
+            execution_successful = False
+            print(f"Train loop failed: {e}")
+            
+        self.assertTrue(execution_successful)

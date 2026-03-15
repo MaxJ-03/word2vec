@@ -9,7 +9,7 @@ class SkipGramHierarchical(Word2VecBase):
     def __init__(self, data_path, context_size, learning_rate, hidden_layer_size):
         # Initializes the Skip-Gram model with Hierarchical Softmax and applies Xavier initialization.
         # W2 requires V-1 rows because a Huffman tree for V words has exactly V-1 internal nodes.
-        super().__init__(data_path, context_size, learning_rate, hidden_layer_size, w2_shape_offset=1)
+        super().__init__(data_path, context_size, learning_rate, hidden_layer_size)
 
         # Calculate the boundary for Xavier/Glorot initialization to maintain variance across layers.
         limit_w1 = np.sqrt(6 / (self.V + self.N))

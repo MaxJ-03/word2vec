@@ -9,7 +9,7 @@ class TestSkipGram(unittest.TestCase):
     def setUpClass(cls):
         cls.test_file = "test_mock_sg.txt"
         with open(cls.test_file, "w", encoding="utf-8") as f:
-            f.write("a b c d e") # V = 5
+            f.write("a b c d e") 
         
         cls.context_size = 2
         cls.learning_rate = 0.05
@@ -21,20 +21,43 @@ class TestSkipGram(unittest.TestCase):
             os.remove(cls.test_file)
 
     def test_forward_pass_math(self):
+        # Validates the mathematical accuracy of the hidden layer and output probability distributions
         model = SkipGram(self.test_file, self.context_size, self.learning_rate, self.N)
         
-        # Fixed Matrices (W1: 5x2, W2: 2x5)
         model.W1 = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3], [0.4, 0.4], [0.5, 0.5]])
         model.W2 = np.array([[0.1, 0.2, 0.3, 0.4, 0.5], [0.1, 0.2, 0.3, 0.4, 0.5]])
 
-        # Input Target: 'b' (1)
         input_id = 1
         
-
-        # h = W1[1] = [0.2, 0.2]
-        # u = W2.T @ h = [0.04, 0.08, 0.12, 0.16, 0.20]
         expected_u = np.array([0.04, 0.08, 0.12, 0.16, 0.20])
         expected_pred = Functions.softmax(expected_u)
 
         predictions = model.forward_pass(input_id)
-        np.testing.assert_almost_equal(predictions, expected_pred, decimal=5, err_msg="Standard SkipGram math failed!")
+        np.testing.assert_almost_equal(predictions, expected_pred, decimal=5)
+
+    def test_backpropagation_math(self):
+        # Validates the gradient calculations and subsequent weight matrix updates
+        model = SkipGram(self.test_file, self.context_size, self.learning_rate, self.N)
+        
+        model.W1 = np.array([[0.1, 0.1], [0.2, 0.2], [0.3, 0.3], [0.4, 0.4], [0.5, 0.5]])
+        model.W2 = np.array([[0.1, 0.2, 0.3, 0.4, 0.5], [0.1, 0.2, 0.3, 0.4, 0.5]])
+        
+        model.h = np.array([0.2, 0.2])
+        model.y_pred = np.array([0.1, 0.6, 0.1, 0.1, 0.1])
+        
+        model.backpropagation(input_vector_id=1, context_vectors_ids=[0, 2], context_size=2)
+        
+        np.testing.assert_almost_equal(model.W1[1], [0.195, 0.195], decimal=5)
+
+    def test_train_execution(self):
+        # Ensures the full training loop executes without runtime or dimension errors
+        model = SkipGram(self.test_file, self.context_size, self.learning_rate, self.N)
+        
+        try:
+            model.train(epochs=1, print_interval=10)
+            execution_successful = True
+        except Exception as e:
+            execution_successful = False
+            print(f"Train loop failed: {e}")
+            
+        self.assertTrue(execution_successful)
