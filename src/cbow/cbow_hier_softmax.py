@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from word2vec_base import Word2VecBase
 from functions import Functions
 from tree_utils import HuffmanTree
@@ -51,7 +52,8 @@ class CBOWHierarchical(Word2VecBase):
         for epoch in range(epochs):
 
             epoch_loss = 0
-            counter = 1 
+            epoch_start_time = time.time()
+            self.update_learning_rate(epoch, epochs)
 
             for i in range(self.data_processing.data_length):
 
@@ -62,8 +64,8 @@ class CBOWHierarchical(Word2VecBase):
 
                 epoch_loss += loss
 
-                if (counter % 1000 == 0): print(f'Epoch: {epoch + 1}, Trained first {counter} words of the dataset.')
-                counter+=1
+                if ((i + 1) % 1000 == 0): print(f'Epoch: {epoch + 1}, Trained first {i + 1} words of the dataset.')
 
             average_loss = epoch_loss / self.data_processing.data_length
-            print(f"Epoch {epoch + 1}/{epochs} | Average Loss: {average_loss:.4f}")
+            epoch_end_time = time.time()
+            print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")

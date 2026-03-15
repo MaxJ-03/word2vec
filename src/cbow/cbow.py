@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from word2vec_base import Word2VecBase
 from functions import Functions
 
@@ -37,9 +38,11 @@ class CBOW(Word2VecBase):
 
         for epoch in range(epochs):
 
-            self.update_learning_rate(epoch, epochs)
-
             epoch_loss = 0
+
+            epoch_start_time = time.time()
+
+            self.update_learning_rate(epoch, epochs)
 
             for i in range(self.data_processing.data_length):
 
@@ -56,4 +59,5 @@ class CBOW(Word2VecBase):
                 if ((i + 1) % 1000 == 0): print(f'Epoch: {epoch + 1}, Trained first {i + 1} words of the dataset.')
 
             average_loss = epoch_loss / self.data_processing.data_length
-            print(f"Epoch {epoch + 1}/{epochs} | Average Loss: {average_loss:.4f}")
+            epoch_end_time = time.time()
+            print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")

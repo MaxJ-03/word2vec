@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from word2vec_base import Word2VecBase
 from functions import Functions
@@ -39,7 +40,13 @@ class SkipGram(Word2VecBase):
     def train(self, epochs):
 
         for epoch in range(epochs):
-            total_loss = 0
+
+            epoch_loss = 0
+
+            epoch_start_time = time.time()
+
+            self.update_learning_rate(epoch, epochs)
+
             for i in range(self.data_processing.data_length):
 
                 input_vector_id = self.data_processing.data_id_to_word_id(i)
@@ -49,7 +56,8 @@ class SkipGram(Word2VecBase):
 
                 self.backpropagation(input_vector_id, context_vectors_ids, context_size)
 
-                total_loss += -np.sum(np.log(predicted_vector[context_vectors_ids] + 1e-9))
+                epoch_loss += -np.sum(np.log(predicted_vector[context_vectors_ids] + 1e-9))
 
-            average_loss = total_loss / self.data_processing.data_length
-            print(f"Epoch {epoch + 1}/{epochs} | Average Loss: {average_loss:.4f}")
+            average_loss = epoch_loss / self.data_processing.data_length
+            epoch_end_time = time.time()
+            print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")
