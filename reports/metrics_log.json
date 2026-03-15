@@ -1,0 +1,9 @@
+[
+    {
+        "model_name": "WikiText2train_Skip-Gram_with_Negative_Sampling_dim100_w10",
+        "semantic_accuracy": 3.2544378698224854,
+        "syntactic_accuracy": 2.3714361843858245,
+        "total_accuracy": 2.605288932419197,
+        "skipped": 9334
+    }
+]

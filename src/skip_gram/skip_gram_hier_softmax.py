@@ -1,75 +1,96 @@
 import time
-
 import numpy as np
 from word2vec_base import Word2VecBase
 from functions import Functions
 from tree_utils import HuffmanTree
 
-# class to implement the skip-gram hierarchical softmax model
 class SkipGramHierarchical(Word2VecBase):
     
     def __init__(self, data_path, context_size, learning_rate, hidden_layer_size):
-        super().__init__(data_path, context_size, learning_rate, hidden_layer_size)
+        # Initializes the Skip-Gram model with Hierarchical Softmax and applies Xavier initialization.
+        # W2 requires V-1 rows because a Huffman tree for V words has exactly V-1 internal nodes.
+        super().__init__(data_path, context_size, learning_rate, hidden_layer_size, w2_shape_offset=1)
 
-        # Initialize weights with Xavier initialization
+        # Calculate the boundary for Xavier/Glorot initialization to maintain variance across layers.
         limit_w1 = np.sqrt(6 / (self.V + self.N))
         self.W1 = np.random.uniform(-limit_w1, limit_w1, size=(self.V, self.N))
-        limit_w2 = np.sqrt(6 / (self.V + self.N))
-        self.W2 = np.random.uniform(-limit_w2, limit_w2, size=(self.V-1, self.N))
+        
+        limit_w2 = np.sqrt(6 / (self.V - 1 + self.N))
+        self.W2 = np.random.uniform(-limit_w2, limit_w2, size=(self.V - 1, self.N))
     
     def update_weights(self, input_vector_id, context_words, huffman_dict):
-
-        h = self.W1[input_vector_id]
+        # Executes the forward and backward passes by traversing the Huffman tree for each context word.
         
+        # Extract the hidden layer representation directly from the input word matrix.
+        h = self.W1[input_vector_id] # (Eq. 27)
+        
+        # Initialize the error accumulator for the hidden layer.
         EH = np.zeros(self.N)
-
         loss = 0
 
+        # In Skip-Gram, we must predict each context word independently using the central input word.
         for target_word in context_words:
+            
+            # Extract the Huffman tree path and corresponding routing codes for the current context word.
             node = huffman_dict[target_word]
             code = np.array(node['code'])
             path = node['path']
 
+            # Retrieve the weight vectors for the internal nodes along the path.
             v = self.W2[path]
+            
+            # Calculate the activation probabilities along the Huffman tree path.
             f = Functions.sigmoid(code * np.dot(v, h))
 
-            loss -= np.sum(np.log(f + 1e-9))
+            # Accumulate the log loss for the path traversal.
+            loss -= np.sum(np.log(f + 1e-9)) # (Eq. 51)
             
-            gradient = code * (f - 1)
+            # Calculate the gradient for the internal nodes along the path.
+            gradient = code * (f - 1) # (Eq. 40)
 
-            EH += np.dot(gradient, v)
+            # Backpropagate the error from the internal nodes to the hidden layer accumulator.
+            EH += np.dot(gradient, v) # (Eq. 42)
 
-            self.W2[path] -= self.learning_rate * np.outer(gradient, h)
+            # Update the weight vectors of the internal nodes along the target path.
+            self.W2[path] -= self.learning_rate * np.outer(gradient, h) # (Eq. 43)
     
-        self.W1[input_vector_id] -= self.learning_rate * EH
+        # Update the input-to-hidden weight for the central input word based on the accumulated error from all context words.
+        self.W1[input_vector_id] -= self.learning_rate * EH # (Eq. 52)
 
         return loss
 
-    def train(self, epochs):
-
+    def train(self, epochs, print_interval=1000000):
+        # Builds the Huffman tree and runs the training loop across the dataset.
+        
+        # Construct the binary Huffman tree based on vocabulary frequencies.
         huffman_tree = HuffmanTree(self.data_processing.vocabulary, self.data_processing.vocabulary_frequency)
         huffman_dict = huffman_tree.convert_tree_to_dict(huffman_tree.root)
 
         for epoch in range(epochs):
 
             epoch_loss = 0
-
             epoch_start_time = time.time()
 
+            # Decay the learning rate to ensure smooth convergence as training progresses.
             self.update_learning_rate(epoch, epochs)
 
             for i in range(self.data_processing.data_length):
 
+                # Extract the central input word and the surrounding target context words.
                 input_vector_id = self.data_processing.data_id_to_word_id(i)
                 context_words, context_size = self.data_processing.one_hot_encoding_context_words(i, self.context_size)
 
+                # Compute gradients and apply weight updates by traversing the Huffman tree for each target.
                 loss = self.update_weights(input_vector_id, context_words, huffman_dict)
 
+                # Accumulate the objective function loss to track model performance.
                 epoch_loss += loss
 
-                if ((i + 1) % 100000 == 0): print(f'Epoch: {epoch + 1}, Trained first {(i + 1)} words of the dataset.')
+                if ((i + 1) % print_interval == 0):
+                    print(f'Epoch: {epoch + 1}, Trained first {(i + 1)} words of the dataset.')
 
+            # Calculate the average loss over the entire dataset for the current epoch.
             average_loss = epoch_loss / self.data_processing.data_length
             epoch_end_time = time.time()
+            
             print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")
-
