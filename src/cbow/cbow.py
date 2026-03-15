@@ -46,7 +46,7 @@ class CBOW(Word2VecBase):
         # Update the input-to-hidden weights specifically for the context words used in the current sample.
         np.add.at(self.W1, context_word_ids, -(self.learning_rate / context_size) * EH) # v_w_I,c(new) = v_w_I,c(old) - (learning_rate / C) * dE/dh (Eq. 25)
 
-    def train(self, epochs):
+    def train(self, epochs, print_interval=100000):
         # Runs the training loop across the dataset for the specified number of epochs.
         for epoch in range(epochs):
             epoch_loss = 0
@@ -68,7 +68,7 @@ class CBOW(Word2VecBase):
                 # Accumulate the cross-entropy loss to track model performance.
                 epoch_loss += -np.log(predicted_vector[output_word_id] + 1e-9)
                 
-                if ((i + 1) % 1000 == 0): 
+                if ((i + 1) % print_interval == 0): 
                     print(f'Epoch: {epoch + 1}, Trained first {i + 1} words of the dataset.')
 
             # Calculate the average loss over the entire dataset for the current epoch.

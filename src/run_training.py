@@ -116,6 +116,7 @@ def run_training():
     # Interactive Hyperparameter selection
     print("\n[ Hyperparameters ] (Press Enter to use defaults)")
     epochs = get_valid_input("  Epochs (default 50): ", default=50)
+    print_interval = get_valid_input("  Printing Interval (default 100000): ", default=100000)
     lr = get_valid_input("  Learning Rate (default 0.05): ", type_cast=float, default=0.05)
     window = get_valid_input("  Context Window Size (default 2): ", default=2)
     dim = get_valid_input("  Embedding Dimension (default 10): ", default=10)
@@ -154,7 +155,7 @@ def run_training():
         print("\nStarting Training Loop...")
 
         main_start_time = time.time()
-        model.train(epochs)
+        model.train(epochs, print_interval)
         main_end_time = time.time()
         
         total_time = main_end_time - main_start_time
