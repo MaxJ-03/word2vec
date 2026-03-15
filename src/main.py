@@ -12,7 +12,7 @@ from skip_gram.skip_gram_neg_sample import SkipGramNegativeSampling
 from evaluation import get_similar_words, evaluate_analogies
 
 def get_valid_input(prompt, valid_range=None, type_cast=int, default=None):
-    """Helper function to guarantee the user enters valid numbers without crashing."""
+    """Helper function to guarantee the user enters a valid number without crashing."""
     while True:
         try:
             user_input = input(prompt).strip()
@@ -29,6 +29,31 @@ def get_valid_input(prompt, valid_range=None, type_cast=int, default=None):
             return val
         except ValueError:
             print(" -> Invalid input. Please enter a valid number.")
+
+def get_multiple_inputs(prompt, valid_range):
+    """Helper function to allow selecting multiple models via a comma-separated list."""
+    while True:
+        try:
+            user_input = input(prompt).strip()
+            if not user_input:
+                print(" -> Please enter at least one number.")
+                continue
+            
+            # Split by comma and strip spaces
+            parts = [p.strip() for p in user_input.split(',')]
+            choices = []
+            
+            for p in parts:
+                val = int(p)
+                if valid_range and val not in valid_range:
+                    print(f" -> {val} is not a valid option.")
+                    raise ValueError()
+                choices.append(val)
+            
+            # Remove duplicates using a dictionary while keeping the original order
+            return list(dict.fromkeys(choices))
+        except ValueError:
+            print(" -> Invalid input. Please enter numbers separated by commas (e.g., 1, 3, 6).")
 
 def main():
     print("=" * 60)
@@ -48,19 +73,22 @@ def main():
     print("\n[ Select Architecture ]")
     for i, (name, _, _) in enumerate(models, 1):
         print(f"  {i}. {name}")
-    print(f"  7. Run All Models Sequentially (Batch Mode)")
+    print(f"  7. Run All Models Sequentially")
     
-    model_choice = get_valid_input("\nEnter the number of your choice: ", valid_range=range(1, 8))
+    # 1. NEW LOGIC: Ask for multiple choices separated by commas
+    choices = get_multiple_inputs("\nEnter model numbers separated by commas (e.g., 3, 6) or 7 for All: ", valid_range=range(1, 8))
     
-    run_all_mode = (model_choice == 7)
-
-    # Setup the safe list of models to run and check if we need negative sampling
-    if run_all_mode:
+    # 2. Build the target queue based on the choices
+    if 7 in choices:
         models_to_run = models
-        uses_negative_sampling = True
+        is_batch_mode = True
     else:
-        models_to_run = [models[model_choice - 1]]
-        uses_negative_sampling = models[model_choice - 1][2]
+        models_to_run = [models[c - 1] for c in choices]
+        # It's a "Batch" if they selected more than 1 model!
+        is_batch_mode = len(models_to_run) > 1 
+
+    # 3. Check if ANY of the selected models need negative sampling
+    uses_negative_sampling = any(m_info[2] for m_info in models_to_run)
 
     # Interactive dataset selection
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -101,13 +129,12 @@ def main():
     auto_test_path = os.path.join(testsets_dir, 'word-test.v1.txt')
     
     if not os.path.exists(auto_test_path):
-        # Fallback just in case you run it from a different directory level
         auto_test_path = 'testsets/word-test.v1.txt'
 
     # Initialization and Training
     print("\n" + "=" * 60)
-    if run_all_mode:
-        print(f" BATCH MODE INITIATED: Training all {len(models_to_run)} architectures")
+    if is_batch_mode:
+        print(f" BATCH MODE INITIATED: Training queue of {len(models_to_run)} architectures")
     else:
         print(f" INITIATING TRAINING: {models_to_run[0][0]}")
     print("=" * 60)
@@ -115,7 +142,7 @@ def main():
     global_start_time = time.time()
     last_trained_model = None
 
-    # Loop through our target models (either 1 or all 6)
+    # Loop through our target queue
     for i, (model_name, ModelClass, requires_neg_sampling) in enumerate(models_to_run, 1):
         print(f"\n--- [{i}/{len(models_to_run)}] Initializing {model_name} ---")
         
@@ -148,7 +175,7 @@ def main():
         if os.path.exists(auto_test_path):
             evaluate_analogies(model, auto_test_path)
         else:
-            print(f"Could not find '{auto_test_path}'. Please ensure 'word-test.v1.txt' is inside the 'testsets' folder.")
+            print(f"⚠️ Could not find '{auto_test_path}'. Please ensure 'word-test.v1.txt' is inside the 'testsets' folder.")
 
         last_trained_model = model
 
@@ -158,11 +185,11 @@ def main():
     ghours, grem = divmod(global_total, 3600)
     gminutes, gseconds = divmod(grem, 60)
     print("\n" + "="*60)
-    print(f"All tasks done! Total run time: {int(ghours)}h {int(gminutes)}m {gseconds:.2f}s")
+    print(f"🎯 ALL TASKS COMPLETE! Total run time: {int(ghours)}h {int(gminutes)}m {gseconds:.2f}s")
     print("="*60)
 
-    # Interactive Evaluation loop (Skip if running Batch Mode)
-    if not run_all_mode and last_trained_model is not None:
+    # Interactive Evaluation loop (Skip if running multiple models)
+    if not is_batch_mode and last_trained_model is not None:
         print("-" * 60)
         
         top_5_tuples = last_trained_model.data_processing.vocabulary_frequency.most_common(5)
@@ -170,7 +197,7 @@ def main():
         
         print("Interactive Evaluation ready! You can:")
         print(" 1. Type a word to see its closest neighbors.")
-        print(f"Suggestions: {', '.join(suggestions)}")
+        print(f"💡 Suggestions: {', '.join(suggestions)}")
         
         while True:
             user_input = input("\nEnter word (or press Enter to quit): ").strip().lower()
@@ -181,7 +208,7 @@ def main():
                 
             get_similar_words(last_trained_model, user_input, top_n=5)
     
-    elif run_all_mode:
+    elif is_batch_mode:
         print("\nNote: Interactive evaluation is skipped in Batch Mode.")
         print("Your embeddings are safely saved in the 'embeddings/' folder.")
 

@@ -73,6 +73,8 @@ class SkipGramNegativeSampling(Word2VecBase):
 
                 epoch_loss += loss
 
+                if ((i + 1) % 100000 == 0): print(f'Epoch: {epoch + 1}, Trained first {(i + 1)} words of the dataset.')
+
             average_loss = epoch_loss / self.data_processing.data_length
             epoch_end_time = time.time()
             print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")

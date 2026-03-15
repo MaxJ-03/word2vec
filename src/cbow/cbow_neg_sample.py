@@ -72,7 +72,7 @@ class CBOWNegativeSampling(Word2VecBase):
 
                 epoch_loss += loss
 
-                if ((i + 1) % 1000 == 0): print(f'Epoch: {epoch + 1}, Trained first {(i + 1)} words of the dataset.')
+                if ((i + 1) % 100000 == 0): print(f'Epoch: {epoch + 1}, Trained first {(i + 1)} words of the dataset.')
 
             average_loss = epoch_loss / self.data_processing.data_length
             epoch_end_time = time.time()
