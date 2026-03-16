@@ -3,34 +3,37 @@ import numpy as np
 import os
 
 def get_similar_words(model, target_word, top_n=5):
-    # Check if the word actually exists in our vocabulary
+    """
+    Identifies and prints the closest semantic neighbors to a given target word.
+    
+    The similarity is determined using cosine similarity between the target word's 
+    vector and the entire embedding matrix. The mathematical calculation is the 
+    dot product of the vectors divided by the product of their magnitudes.
+    """
     if target_word not in model.data_processing.vocabulary:
         print(f"Word '{target_word}' not found in vocabulary.")
         return
 
-    # Get the integer ID of our target word
     target_id = model.data_processing.word_to_id[target_word]
-
-    # Extract the target word's mathematical vector from W1
     target_vector = model.W1[target_id]
 
-    # Calculate the Cosine Similarity against the entire W1 matrix 
+    # Calculate cosine similarity against the entire W1 matrix
     dot_products = np.dot(model.W1, target_vector)
     norms = np.linalg.norm(model.W1, axis=1) * np.linalg.norm(target_vector)
     
-    # Avoid division by zero
+    # Add a small epsilon to avoid division by zero during normalization
     similarities = dot_products / (norms + 1e-9)
 
-    # Sort the indices by highest similarity score
+    # Sort the indices descendingly to position the highest similarity scores first
     closest_ids = np.argsort(similarities)[::-1]
 
     print(f"\nWords most similar to '{target_word}':")
     
-    # Explicitly loop and skip the target word
     count = 0
     for idx in closest_ids:
+        # Prevent the target word from being returned as its own closest neighbor
         if idx == target_id:
-            continue  # Skip the word itself!
+            continue
             
         word = model.data_processing.id_to_word[idx]
         score = similarities[idx]
@@ -42,8 +45,20 @@ def get_similar_words(model, target_word, top_n=5):
 
 def evaluate_analogies(embeddings_obj, test_file_path):
     """
-    Evaluates semantic and syntactic accuracy of word embeddings using the Mikolov analogy test.
-    Prints a formatted table to the console and returns a dictionary of the calculated metrics.
+    Evaluates the semantic and syntactic accuracy of the word embeddings using 
+    the standard Mikolov analogy test suite.
+    
+    The evaluation processes analogies in the format "A is to B as C is to D".
+    To predict D, the target vector is computed via vector offset:
+    Target Vector = Vector(B) - Vector(A) + Vector(C)
+    
+    The model's vocabulary is searched using cosine similarity to find the vector 
+    mathematically closest to this calculated target vector. The input words 
+    (A, B, and C) are excluded from the candidate predictions.
+    
+    If the predicted word matches D, the prediction is marked correct. Analogies 
+    containing words not present in the model's vocabulary are skipped entirely 
+    and do not impact the final accuracy calculations.
     """
     test_filename = os.path.basename(test_file_path)
     print(f"\n--- Running Analogy Benchmark on {test_filename} ---")
@@ -56,6 +71,7 @@ def evaluate_analogies(embeddings_obj, test_file_path):
     W1 = embeddings_obj.W1
     model_name = getattr(embeddings_obj, 'name', 'Training_Session_Model')
 
+    # Normalize the entire W1 matrix to unit length to simplify cosine similarity to a simple dot product
     W1_norms = np.linalg.norm(W1, axis=1, keepdims=True)
     W1_norms[W1_norms == 0] = 1e-9
     W1_normalized = W1 / W1_norms
@@ -75,6 +91,7 @@ def evaluate_analogies(embeddings_obj, test_file_path):
                 if not line:
                     continue
                     
+                # Identify category transitions within the text file
                 if line.startswith(":"):
                     if "gram" in line:
                         current_category = 'syntactic'
@@ -91,6 +108,7 @@ def evaluate_analogies(embeddings_obj, test_file_path):
                 
                 w1, w2, w3, expected_w4 = words
                 
+                # Exclude analogy if any required token is missing from the trained vocabulary
                 if w1 not in vocab or w2 not in vocab or w3 not in vocab or expected_w4 not in vocab:
                     results[current_category]['skipped'] += 1
                     continue
@@ -99,10 +117,13 @@ def evaluate_analogies(embeddings_obj, test_file_path):
 
                 id1, id2, id3 = word_to_id[w1], word_to_id[w2], word_to_id[w3]
                 
+                # Execute the relational vector offset calculation
                 target_vector = W1_normalized[id2] - W1_normalized[id1] + W1_normalized[id3]
                 
+                # Compute cosine similarities for the resulting vector space location
                 similarities = np.dot(W1_normalized, target_vector)
                 
+                # Mask the input words so they are not selected as the output prediction
                 similarities[id1] = -np.inf
                 similarities[id2] = -np.inf
                 similarities[id3] = -np.inf
@@ -129,6 +150,7 @@ def evaluate_analogies(embeddings_obj, test_file_path):
     syn_skip = results['syntactic']['skipped']
     tot_skip = sem_skip + syn_skip
 
+    # Calculate final accuracy metrics
     sem_acc = (sem_cor / sem_eval * 100) if sem_eval > 0 else 0
     syn_acc = (syn_cor / syn_eval * 100) if syn_eval > 0 else 0
     tot_acc = (tot_cor / tot_eval * 100) if tot_eval > 0 else 0
