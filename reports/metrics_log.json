@@ -79,5 +79,50 @@
         "syntactic_accuracy": 0.36036036036036034,
         "total_accuracy": 0.5076939181408981,
         "skipped": 438
+    },
+    {
+        "model_name": "WikiText2train_Skip-Gram_with_Negative_Sampling_ep3_lr0.025_dim100_w4_ns10",
+        "semantic_evaluated": 2704,
+        "semantic_accuracy": 2.477810650887574,
+        "syntactic_evaluated": 7506,
+        "syntactic_accuracy": 0.5595523581135092,
+        "total_accuracy": 1.0675808031341822,
+        "skipped": 9334
+    },
+    {
+        "model_name": "WikiText2train_Skip-Gram_with_Hierarchical_Softmax_ep3_lr0.025_dim80_w4",
+        "semantic_evaluated": 2704,
+        "semantic_accuracy": 3.9571005917159763,
+        "syntactic_evaluated": 7506,
+        "syntactic_accuracy": 3.7303490540900612,
+        "total_accuracy": 3.7904015670910876,
+        "skipped": 9334
+    },
+    {
+        "model_name": "WikiText2train_CBOW_with_Hierarchical_Softmax_ep3_lr0.025_dim100_w4",
+        "semantic_evaluated": 2704,
+        "semantic_accuracy": 3.2914201183431953,
+        "syntactic_evaluated": 7506,
+        "syntactic_accuracy": 1.025845989874767,
+        "total_accuracy": 1.6258570029382957,
+        "skipped": 9334
+    },
+    {
+        "model_name": "WikiText2train_Skip-Gram_with_Hierarchical_Softmax_ep3_lr0.025_dim100_w4",
+        "semantic_evaluated": 2704,
+        "semantic_accuracy": 4.252958579881657,
+        "syntactic_evaluated": 7506,
+        "syntactic_accuracy": 4.489741540101252,
+        "total_accuracy": 4.427032321253673,
+        "skipped": 9334
+    },
+    {
+        "model_name": "WikiText2train_CBOW_with_Negative_Sampling_ep3_lr0.025_dim100_w4_ns10",
+        "semantic_evaluated": 2704,
+        "semantic_accuracy": 0.22189349112426035,
+        "syntactic_evaluated": 7506,
+        "syntactic_accuracy": 0.01332267519317879,
+        "total_accuracy": 0.06856023506366307,
+        "skipped": 9334
     }
 ]
