@@ -14,8 +14,8 @@ def update_readme_with_table(md_table_content, base_dir):
     with open(readme_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    start_marker = ""
-    end_marker = ""
+    start_marker = "<" + "!-- BENCHMARK_TABLE_START --" + ">"
+    end_marker = "<" + "!-- BENCHMARK_TABLE_END --" + ">"
 
     if start_marker in content and end_marker in content:
         before_table = content.split(start_marker)[0]
