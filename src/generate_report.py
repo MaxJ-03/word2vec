@@ -1,7 +1,44 @@
 import os
 import json
+import re
 from evaluate_saved_embed import LoadedEmbeddings, save_metrics_to_log
 from evaluation import evaluate_analogies
+
+def parse_filename(filename):
+    # Extracts hyperparameters and dataset information from the saved embedding filename.
+    hyperparams_pattern = r'_ep(\d+)_lr([0-9.]+)_dim(\d+)_w(\d+)(?:_ns(\d+))?'
+    match = re.search(hyperparams_pattern, filename)
+    
+    if match:
+        epochs = match.group(1)
+        lr = match.group(2)
+        dim = match.group(3)
+        window = match.group(4)
+        ns = match.group(5) if match.group(5) else "-"
+        
+        prefix = filename[:match.start()]
+        
+        architectures = [
+            "Standard_CBOW", 
+            "CBOW_with_Hierarchical_Softmax", 
+            "CBOW_with_Negative_Sampling",
+            "Standard_Skip-Gram", 
+            "Skip-Gram_with_Hierarchical_Softmax", 
+            "Skip-Gram_with_Negative_Sampling"
+        ]
+        
+        dataset = "Unknown"
+        architecture = "Unknown"
+        
+        for arch in architectures:
+            if arch in prefix:
+                architecture = arch.replace("_", " ")
+                dataset = prefix.replace(f"_{arch}", "")
+                break
+                
+        return dataset, architecture, epochs, lr, dim, window, ns
+        
+    return "Unknown", filename, "-", "-", "-", "-", "-"
 
 def update_readme_with_table(md_table_content, base_dir):
     # Updates the README.md file by injecting the markdown table between predefined markers.
@@ -30,7 +67,7 @@ def update_readme_with_table(md_table_content, base_dir):
         print("Markers not found in README.md. Please add the start and end markers.")
 
 def generate_markdown_report_from_log():
-    # Scans the embeddings directory, automatically evaluates any models missing from the log,
+    # Scans the embeddings directory, evaluates any models missing from the log,
     # generates a comprehensive Markdown comparison table sorted by accuracy, and updates the README.
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     embeddings_dir = os.path.join(base_dir, 'embeddings')
@@ -40,7 +77,6 @@ def generate_markdown_report_from_log():
     os.makedirs(reports_dir, exist_ok=True)
     
     log_path = os.path.join(reports_dir, 'metrics_log.json')
-    report_path = os.path.join(reports_dir, 'benchmark_comparison.md')
     test_file_path = os.path.join(testsets_dir, 'word-test.v1.txt')
 
     if not os.path.exists(test_file_path):
@@ -87,18 +123,30 @@ def generate_markdown_report_from_log():
 
     log_data_sorted = sorted(log_data, key=lambda x: x['total_accuracy'], reverse=True)
 
-    md_table = "| Model Architecture | Semantic Accuracy | Syntactic Accuracy | Total Accuracy |\n"
-    md_table += "|---|---|---|---|\n"
+    headers = [
+        "Dataset", "Architecture", "Epochs", "LR", "Dim", "Window", "NS",
+        "Sem. Eval", "Sem. Acc", "Syn. Eval", "Syn. Acc", "Skipped", "Total Acc"
+    ]
+    
+    md_table = "| " + " | ".join(headers) + " |\n"
+    md_table += "|" + "|".join(["---"] * len(headers)) + "|\n"
     
     for res in log_data_sorted:
-        md_table += f"| `{res['model_name']}` | {res['semantic_accuracy']:.2f}% | {res['syntactic_accuracy']:.2f}% | {res['total_accuracy']:.2f}% |\n"
+        model_name = res.get('model_name', 'Unknown')
+        dataset, arch, epochs, lr, dim, window, ns = parse_filename(model_name)
         
-    md_content = "# Word2Vec Architecture Comparison\n\n" + md_table
-    
-    with open(report_path, 'w', encoding='utf-8') as f:
-        f.write(md_content)
+        sem_eval = res.get('semantic_evaluated', 'N/A')
+        syn_eval = res.get('syntactic_evaluated', 'N/A')
+        sem_acc = f"{res.get('semantic_accuracy', 0):.2f}%"
+        syn_acc = f"{res.get('syntactic_accuracy', 0):.2f}%"
+        skipped = res.get('skipped', 'N/A')
+        tot_acc = f"{res.get('total_accuracy', 0):.2f}%"
         
-    print(f"Markdown report generated successfully at: {report_path}")
+        row = [
+            dataset, arch, epochs, lr, dim, window, ns,
+            str(sem_eval), sem_acc, str(syn_eval), syn_acc, str(skipped), tot_acc
+        ]
+        md_table += "| " + " | ".join(row) + " |\n"
 
     update_readme_with_table(md_table, base_dir)
 

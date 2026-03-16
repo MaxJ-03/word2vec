@@ -170,6 +170,7 @@ def run_training():
         clean_dataset_name = os.path.splitext(os.path.basename(selected_file))[0]
         safe_model_name = model_name.replace(" ", "_")
         
+        
         # Pass the epochs, and pass the neg_samples only if the model uses them
         if requires_neg_sampling:
             model.save_embeddings(clean_dataset_name, safe_model_name, epochs, neg_samples)

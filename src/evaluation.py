@@ -1,5 +1,4 @@
 import time
-
 import numpy as np
 import os
 
@@ -40,10 +39,6 @@ def get_similar_words(model, target_word, top_n=5):
         count += 1
         if count == top_n:
             break
-
-import os
-import time
-import numpy as np
 
 def evaluate_analogies(embeddings_obj, test_file_path):
     """
@@ -153,7 +148,9 @@ def evaluate_analogies(embeddings_obj, test_file_path):
 
     metrics = {
         'model_name': model_name,
+        'semantic_evaluated': sem_eval,
         'semantic_accuracy': sem_acc,
+        'syntactic_evaluated': syn_eval,
         'syntactic_accuracy': syn_acc,
         'total_accuracy': tot_acc,
         'skipped': tot_skip

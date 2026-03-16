@@ -3,7 +3,16 @@
 ## Overview
 This repository contains a custom implementation of the Word2Vec algorithm. The primary goal of this project was to build the core training loop and optimization procedures entirely in pure Python and NumPy, without relying on high-level machine learning frameworks like PyTorch or TensorFlow. 
 
-The full optimization procedure—including the forward pass, loss calculation, gradient derivations, and parameter updates—was implemented for both standard Word2Vec variants (Continuous Bag-of-Words and Skip-Gram). A modular and object-oriented architecture was chosen to allow for easy testing and comparison between different architectural setups.
+The full optimization procedure, including the forward pass, loss calculation, gradient derivations, and parameter updates, was implemented for both standard Word2Vec variants (Continuous Bag-of-Words and Skip-Gram). A modular and object-oriented architecture was chosen to allow for easy testing and comparison between different architectural setups.
+
+## Model Architectures
+The standard Word2Vec models learn distributed representations of words by predicting context within a specified window. Two primary architectures are implemented in this repository:
+
+### Continuous Bag-of-Words (CBOW)
+The CBOW architecture is designed to predict a target word based on its surrounding context words. The context word vectors are averaged (or summed) in the hidden layer before being used for prediction. This approach is computationally efficient and smooths over distributional information, making it effective for smaller datasets.
+
+### Skip-Gram
+The Skip-Gram architecture reverses the CBOW approach by using a single target word to predict the surrounding context words. By forcing the model to predict multiple context words from a single input, finer-grained vectors are created, which typically perform better for infrequent words and larger datasets.
 
 ## Literature and References
 The development and mathematical derivations in this repository rely on two main sources:
@@ -13,6 +22,12 @@ The development and mathematical derivations in this repository rely on two main
   * Mikolov, T., Sutskever, I., Chen, K., Corrado, G. S., & Dean, J. (2013). *Distributed Representations of Words and Phrases and their Compositionality*. Advances in Neural Information Processing Systems, 26.
 * **Implementation Details:** The mathematical implementation closely follows Xin Rong's detailed breakdown. The equations provided in this paper were used directly to write the matrix updates and backpropagation steps across all model variants:
   * Rong, X. (2014). *word2vec Parameter Learning Explained*. arXiv preprint arXiv:1411.2738.
+
+## Implementation Details
+To achieve a pure NumPy implementation, several foundational optimization and data management techniques were built from scratch:
+
+* **Learning Rate Decay:** An exponential learning rate decay mechanism is implemented to ensure the model converges smoothly. While the original Word2Vec publication utilized a linear decay strategy based on the volume of processed words, this implementation applies an exponential decay based on the number of completed training epochs. The learning rate starts at a configured hyperparameter and gradually decreases, allowing for large adjustments early in training and fine-tuned, microscopic steps as the model approaches the local minimum.
+* **Saving Weights:** Upon completion of the training loop, the final word embeddings are extracted from the hidden layer weights, which serve as the primary embedding matrix. These vectors are normalized to unit length to optimize downstream cosine similarity calculations and are saved to disk as a `.txt` file. The first line denotes the vocabulary size and vector dimensions, followed by one line per word containing the token and its respective vector components.
 
 ## Architectures Implemented
 The repository includes the major variations of the Word2Vec model, supporting both standard softmax and the optimized training techniques:
@@ -26,7 +41,7 @@ Located in `src/cbow/`:
 ### Skip-Gram
 Located in `src/skip_gram/`:
 * `skip_gram.py`: Standard Skip-Gram model.
-* `skip_gram_hier_softmax.py`: Skip-Gram a binary Huffman Tree for Hierarchical Softmax.
+* `skip_gram_hier_softmax.py`: Skip-Gram with a binary Huffman Tree for Hierarchical Softmax.
 * `skip_gram_neg_sample.py`: Skip-Gram with Negative Sampling.
 
 ## Usage and Terminal UI
@@ -39,10 +54,10 @@ To start the hub, execute:
 1. **Train New Models:** * Allows selection of a specific text dataset from the `trainsets/` directory.
    * Prompts for hyperparameter configuration (epochs, learning rate, window size, embedding dimension, negative sampling size).
    * Supports a Batch Mode to sequentially train all 6 architectures automatically.
-   * Automatically saves trained weights to the `embeddings/` folder.
+   * Trained weights are saved to the `embeddings/` folder.
 2. **Evaluate Saved Models:** * Loads saved `.txt` embedding matrices into memory.
-   * Allows interactive closest-neighbor word queries via cosine similarity.
-   * Executes the standardized analogy benchmark.
+   * Prints the 5 closest-neighbors (most cosine similar) words to the one asked.
+   * Executes the standardized analogy benchmark (see the Evaluation and Analogy Testing section below for details).
 3. **Generate Markdown Report:** * Compiles the analogy accuracy results from all trained models into a clean Markdown table.
 
 ## Testing Suite
@@ -56,23 +71,38 @@ The models are evaluated using the standard `word-test.v1.txt` dataset, original
 * **Semantic accuracy** (e.g., Athens : Greece :: Oslo : Norway)
 * **Syntactic accuracy** (e.g., apparent : apparently :: rapid : rapidly)
 
+### Accuracy Calculation
+Vector offsets are computed using cosine similarity. For an analogy question such as "A is to B as C is to D", the target vector is calculated as:
+$Vector(B) - Vector(A) + Vector(C)$
+
+The vocabulary is then searched for the vector mathematically closest to this result. If the closest word matches the target word D, it is marked as correct. If any of the four words in the analogy are missing from the model's vocabulary, the question is skipped. The final accuracy is calculated as the percentage of correctly answered, non-skipped analogies.
+
 ## Benchmark Results
-Below is the performance comparison of the different architectures tested on the analogy benchmark.
+Below is the performance comparison of the different architectures tested on the analogy benchmark (legend below the table).
+
 <!-- BENCHMARK_TABLE_START -->
-| Model Architecture | Semantic Accuracy | Syntactic Accuracy | Total Accuracy |
-|---|---|---|---|
-| `dummy_Skip-Gram_with_Negative_Sampling_dim10_w2` | 33.33% | 0.00% | 33.33% |
-| `dummy_CBOW_with_Hierarchical_Softmax_dim10_w2` | 8.33% | 0.00% | 8.33% |
-| `dummy_CBOW_with_Negative_Sampling_dim10_w2` | 8.33% | 0.00% | 8.33% |
-| `dummy_Skip-Gram_with_Hierarchical_Softmax_dim10_w2` | 8.33% | 0.00% | 8.33% |
-| `dummy_Standard_Skip-Gram_dim10_w2` | 8.33% | 0.00% | 8.33% |
-| `WikiText2train_Skip-Gram_with_Negative_Sampling_dim100_w10` | 3.25% | 2.37% | 2.61% |
-| `text8_CBOW_with_Negative_Sampling_ep1_lr0.025_dim70_w4_ns20` | 0.18% | 0.11% | 0.14% |
-| `WikiText2train_CBOW_with_Negative_Sampling_dim100_w10` | 0.26% | 0.05% | 0.11% |
-| `WikiText2train_CBOW_with_Negative_Sampling_dim300_w10` | 0.00% | 0.01% | 0.01% |
-| `dummy_CBOW_with_Hierarchical_Softmax_dim10_w10` | 0.00% | 0.00% | 0.00% |
-| `dummy_CBOW_with_Negative_Sampling_dim10_w10` | 0.00% | 0.00% | 0.00% |
-| `dummy_Standard_CBOW_dim10_w10` | 0.00% | 0.00% | 0.00% |
-| `dummy_Standard_CBOW_dim10_w2` | 0.00% | 0.00% | 0.00% |
+| Dataset | Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dummy | Skip-Gram with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 8.89% | 24 | 20.83% | 19475 | 13.04% |
+| dummy | Standard Skip-Gram | 50 | 0.025 | 10 | 4 | - | 45 | 11.11% | 24 | 16.67% | 19475 | 13.04% |
+| dummy | Skip-Gram with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 13.33% | 24 | 8.33% | 19475 | 11.59% |
+| dummy | CBOW with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 0.00% | 24 | 16.67% | 19475 | 5.80% |
+| dummy | CBOW with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
+| dummy | Standard CBOW | 50 | 0.025 | 10 | 4 | - | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
+| text8 | CBOW with Negative Sampling | 1 | 0.025 | 70 | 4 | 20 | 8561 | 0.18% | 10545 | 0.11% | 438 | 0.14% |
 
 <!-- BENCHMARK_TABLE_END -->
+
+* **Dataset:** The text corpus used for training (e.g., `text8`, `dummy`).
+* **Architecture:** The specific Word2Vec optimization strategy employed.
+* **Epochs:** The number of complete passes through the training dataset.
+* **LR (Learning Rate):** The initial learning rate provided before exponential decay.
+* **Dim:** The dimensionality of the word embedding vectors (hidden layer size).
+* **Window:** The maximum distance of context words before and after the target word.
+* **NS:** The number of negative samples drawn per positive context pair (applicable only to Negative Sampling architectures).
+* **Sem. Eval:** The number of semantic analogies (e.g., capitals, family) successfully evaluated.
+* **Sem. Acc:** The accuracy percentage for evaluated semantic analogies.
+* **Syn. Eval:** The number of syntactic analogies (e.g., plurals, comparatives) successfully evaluated.
+* **Syn. Acc:** The accuracy percentage for evaluated syntactic analogies.
+* **Skipped:** The total number of test questions discarded because one or more words were missing from the model's vocabulary.
+* **Total Acc:** The overall accuracy across all evaluated semantic and syntactic questions.

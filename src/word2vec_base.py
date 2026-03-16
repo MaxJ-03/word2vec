@@ -32,7 +32,7 @@ class Word2VecBase:
         # Build a comprehensive filename with all hyperparameters
         ns_str = f"_ns{neg_samples}" if neg_samples is not None else ""
         
-        file_name = f"{dataset_name}_{model_name}_ep{epochs}_lr{self.learning_rate}_dim{self.N}_w{self.context_size}{ns_str}.txt"
+        file_name = f"{dataset_name}_{model_name}_ep{epochs}_lr{self.initial_lr}_dim{self.N}_w{self.context_size}{ns_str}.txt"
         save_path = os.path.join(save_dir, file_name)
 
         print(f"\nSaving {self.V} word embeddings to {save_path}...")
