@@ -87,12 +87,17 @@ Below is the performance comparison of the different architectures tested on the
 | dummy | Standard Skip-Gram | 50 | 0.025 | 10 | 4 | - | 45 | 11.11% | 24 | 16.67% | 19475 | 13.04% |
 | dummy | Skip-Gram with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 13.33% | 24 | 8.33% | 19475 | 11.59% |
 | dummy | CBOW with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 0.00% | 24 | 16.67% | 19475 | 5.80% |
+| WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 4.25% | 7506 | 4.49% | 9334 | 4.43% |
 | dummy | CBOW with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
 | dummy | Standard CBOW | 50 | 0.025 | 10 | 4 | - | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
 | WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.001160397208403195 | 80 | 4 | - | 2704 | 3.96% | 7506 | 3.73% | 9334 | 3.79% |
+| WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 80 | 4 | - | 2704 | 3.96% | 7506 | 3.73% | 9334 | 3.79% |
+| WikiText2train | CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 3.29% | 7506 | 1.03% | 9334 | 1.63% |
 | text8 | Skip-Gram with Negative Sampling | 1 | 0.05 | 150 | 4 | 20 | 8561 | 1.59% | 10545 | 1.48% | 438 | 1.53% |
+| WikiText2train | Skip-Gram with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 2.48% | 7506 | 0.56% | 9334 | 1.07% |
 | text8 | CBOW with Negative Sampling | 1 | 0.05 | 150 | 4 | 20 | 8561 | 0.69% | 10545 | 0.36% | 438 | 0.51% |
 | text8 | CBOW with Negative Sampling | 1 | 0.025 | 70 | 4 | 20 | 8561 | 0.18% | 10545 | 0.11% | 438 | 0.14% |
+| WikiText2train | CBOW with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 0.22% | 7506 | 0.01% | 9334 | 0.07% |
 
 <!-- BENCHMARK_TABLE_END -->
 
