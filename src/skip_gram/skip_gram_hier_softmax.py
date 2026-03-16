@@ -66,6 +66,8 @@ class SkipGramHierarchical(Word2VecBase):
         huffman_tree = HuffmanTree(self.data_processing.vocabulary, self.data_processing.vocabulary_frequency)
         huffman_dict = huffman_tree.convert_tree_to_dict(huffman_tree.root)
 
+        print("Tree created.")
+
         for epoch in range(epochs):
 
             epoch_loss = 0
