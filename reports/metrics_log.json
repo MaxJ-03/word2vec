@@ -124,5 +124,41 @@
         "syntactic_accuracy": 0.01332267519317879,
         "total_accuracy": 0.06856023506366307,
         "skipped": 9334
+    },
+    {
+        "model_name": "OutlineOfHistory_CBOW_with_Negative_Sampling_ep3_lr0.025_dim100_w4_ns20",
+        "semantic_evaluated": 343,
+        "semantic_accuracy": 0.0,
+        "syntactic_evaluated": 5795,
+        "syntactic_accuracy": 0.01725625539257981,
+        "total_accuracy": 0.016291951775822745,
+        "skipped": 13406
+    },
+    {
+        "model_name": "OutlineOfHistory_Skip-Gram_with_Hierarchical_Softmax_ep3_lr0.025_dim100_w4",
+        "semantic_evaluated": 343,
+        "semantic_accuracy": 3.498542274052478,
+        "syntactic_evaluated": 5795,
+        "syntactic_accuracy": 0.724762726488352,
+        "total_accuracy": 0.8797653958944283,
+        "skipped": 13406
+    },
+    {
+        "model_name": "OutlineOfHistory_CBOW_with_Hierarchical_Softmax_ep3_lr0.025_dim100_w4",
+        "semantic_evaluated": 343,
+        "semantic_accuracy": 2.9154518950437316,
+        "syntactic_evaluated": 5795,
+        "syntactic_accuracy": 0.29335634167385677,
+        "total_accuracy": 0.43988269794721413,
+        "skipped": 13406
+    },
+    {
+        "model_name": "OutlineOfHistory_Skip-Gram_with_Negative_Sampling_ep3_lr0.025_dim100_w4_ns20",
+        "semantic_evaluated": 343,
+        "semantic_accuracy": 1.749271137026239,
+        "syntactic_evaluated": 5795,
+        "syntactic_accuracy": 0.051768766177739435,
+        "total_accuracy": 0.1466275659824047,
+        "skipped": 13406
     }
 ]
