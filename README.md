@@ -1,5 +1,16 @@
 # Word2Vec in Pure NumPy
 
+## Table of Contents
+* [Overview](#overview)
+* [Model Architectures](#model-architectures)
+* [Literature and References](#literature-and-references)
+* [Implementation Details](#implementation-details)
+* [Architectures Implemented](#architectures-implemented)
+* [Usage and Terminal UI](#usage-and-terminal-ui)
+* [Testing Suite](#testing-suite)
+* [Evaluation and Analogy Testing](#evaluation-and-analogy-testing)
+* [Benchmark Results](#benchmark-results)
+
 ## Overview
 This repository contains a custom implementation of the Word2Vec algorithm. The primary goal of this project was to build the core training loop and optimization procedures entirely in pure Python and NumPy, without relying on high-level machine learning frameworks like PyTorch or TensorFlow. 
 
@@ -51,14 +62,14 @@ To start the hub, execute:
     python src/main.py
 
 ### Functionalities
-1. **Train New Models:** * Allows selection of a specific text dataset from the `trainsets/` directory.
+1. **Train New Models:** Allows selection of a specific text dataset from the `trainsets/` directory.
    * Prompts for hyperparameter configuration (epochs, learning rate, window size, embedding dimension, negative sampling size).
    * Supports a Batch Mode to sequentially train all 6 architectures automatically.
    * Trained weights are saved to the `embeddings/` folder.
-2. **Evaluate Saved Models:** * Loads saved `.txt` embedding matrices into memory.
+2. **Evaluate Saved Models:** Loads saved `.txt` embedding matrices into memory.
    * Prints the 5 closest-neighbors (most cosine similar) words to the one asked.
    * Executes the standardized analogy benchmark (see the Evaluation and Analogy Testing section below for details).
-3. **Generate Markdown Report:** * Compiles the analogy accuracy results from all trained models into a clean Markdown table.
+3. **Generate Markdown Report:** Compiles the analogy accuracy results from all trained models into a clean Markdown table.
 
 ## Testing Suite
 The repository includes a testing suite that validates the data processing pipeline, Huffman tree generation, and the exact calculations of the forward and backward passes. 
