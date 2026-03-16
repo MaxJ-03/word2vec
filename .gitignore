@@ -1,0 +1,6 @@
+# Ignore all large trained embeddings
+embeddings/*.txt
+
+# EXCEPTION: Keep dummy embeddings for the GitHub Actions CI/CD pipeline
+!embeddings/dummy*.txt
+!embeddings/WikiText2train*.txt
