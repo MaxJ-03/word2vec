@@ -61,5 +61,32 @@
         "syntactic_accuracy": 0.11379800853485066,
         "total_accuracy": 0.14131686381241496,
         "skipped": 438
+    },
+    {
+        "model_name": "text8_Skip-Gram_with_Negative_Sampling_ep1_lr0.05_dim150_w4_ns20",
+        "semantic_evaluated": 8561,
+        "semantic_accuracy": 1.5885994626795936,
+        "syntactic_evaluated": 10545,
+        "syntactic_accuracy": 1.4793741109530583,
+        "total_accuracy": 1.5283157123416728,
+        "skipped": 438
+    },
+    {
+        "model_name": "WikiText2train_Skip-Gram_with_Hierarchical_Softmax_ep3_lr0.001160397208403195_dim80_w4",
+        "semantic_evaluated": 2704,
+        "semantic_accuracy": 3.9571005917159763,
+        "syntactic_evaluated": 7506,
+        "syntactic_accuracy": 3.7303490540900612,
+        "total_accuracy": 3.7904015670910876,
+        "skipped": 9334
+    },
+    {
+        "model_name": "text8_CBOW_with_Negative_Sampling_ep1_lr0.05_dim150_w4_ns20",
+        "semantic_evaluated": 8561,
+        "semantic_accuracy": 0.6891718257212942,
+        "syntactic_evaluated": 10545,
+        "syntactic_accuracy": 0.36036036036036034,
+        "total_accuracy": 0.5076939181408981,
+        "skipped": 438
     }
 ]
