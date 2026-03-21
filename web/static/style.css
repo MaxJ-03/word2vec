@@ -1,0 +1,189 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #f4f7f6;
+    margin: 0;
+    color: #333;
+}
+
+header {
+    background: #1a2a3a;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.header-subtitle {
+    color: #bdc3c7;
+    font-size: 15px;
+    max-width: 950px;
+    margin: 0 auto 20px auto;
+    line-height: 1.5;
+    font-weight: 400;
+    text-align:justify
+}
+
+nav button {
+    background: #2c3e50;
+    color: #bdc3c7;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+nav button.active {
+    background: #18bc9c;
+    color: white;
+}
+
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 25px;
+    max-width: 1600px;
+    margin: 25px auto;
+    padding: 0 25px;
+}
+
+.left-panel,
+.right-panel {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Input Elements */
+.select-wrapper {
+    width: 100%;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+select,
+input[type="text"],
+input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Checkbox Alignment */
+.arch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.arch-list label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13.5px;
+    cursor: pointer;
+}
+
+.arch-list input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+/* Grid for 5 items */
+.hyperparams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.hyperparams-grid label {
+    font-size: 11px;
+    font-weight: bold;
+    color: #666;
+}
+
+.analogy-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.analogy-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.symbol {
+    font-weight: bold;
+    color: #999;
+}
+
+.full-btn {
+    width: 100%;
+    margin-top: 15px;
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.full-btn:hover {
+    background: #2980b9;
+}
+
+/* Table and Canvas */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+th,
+td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+}
+
+td:first-child {
+    word-break: break-all;
+    font-family: monospace;
+    line-height: 1.4;
+}
+
+#analogy-canvas {
+    width: 100%;
+    margin-top: 20px;
+    border: 1px solid #eee;
+    background: #fafafa;
+}
+
+#status-box {
+    margin-top: 20px;
+    padding: 12px;
+    background: #ebf5fb;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}

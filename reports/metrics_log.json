@@ -241,5 +241,95 @@
         "syntactic_accuracy": 0.448662640207075,
         "total_accuracy": 0.7494297816878462,
         "skipped": 13406
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Hierarchical_Softmax_ep100_lr0.025_dim50_w5",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 8.88888888888889,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 8.333333333333332,
+        "total_accuracy": 8.695652173913043,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Negative_Sampling_ep100_lr0.025_dim50_w5_ns5",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 8.88888888888889,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 8.333333333333332,
+        "total_accuracy": 8.695652173913043,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Hierarchical_Softmax_ep40_lr0.025_dim10_w3.txt",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 11.11111111111111,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 25.0,
+        "total_accuracy": 15.942028985507244,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Negative_Sampling_ep40_lr0.025_dim10_w3_ns5.txt",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 6.666666666666667,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 33.33333333333333,
+        "total_accuracy": 15.942028985507244,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Hierarchical_Softmax_ep40_lr0.025_dim40_w4.txt",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 11.11111111111111,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 12.5,
+        "total_accuracy": 11.594202898550725,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Negative_Sampling_ep40_lr0.025_dim40_w4_ns5.txt",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 13.333333333333334,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 29.166666666666668,
+        "total_accuracy": 18.84057971014493,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Hierarchical_Softmax_ep40_lr0.025_dim10_w3",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 11.11111111111111,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 25.0,
+        "total_accuracy": 15.942028985507244,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Hierarchical_Softmax_ep40_lr0.025_dim40_w4",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 11.11111111111111,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 12.5,
+        "total_accuracy": 11.594202898550725,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Negative_Sampling_ep40_lr0.025_dim10_w3_ns5",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 6.666666666666667,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 33.33333333333333,
+        "total_accuracy": 15.942028985507244,
+        "skipped": 19475
+    },
+    {
+        "model_name": "dummy_Skip-Gram_with_Negative_Sampling_ep40_lr0.025_dim40_w4_ns5",
+        "semantic_evaluated": 45,
+        "semantic_accuracy": 13.333333333333334,
+        "syntactic_evaluated": 24,
+        "syntactic_accuracy": 29.166666666666668,
+        "total_accuracy": 18.84057971014493,
+        "skipped": 19475
     }
 ]

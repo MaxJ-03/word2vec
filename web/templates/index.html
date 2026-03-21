@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Word2Vec Control Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <h1>Word2Vec Control Hub</h1>
+        <p class="header-subtitle">
+            Use the two buttons below to navigate the dashboard.<br>
+            Select <strong>Model Explorer</strong> to load saved embeddings into memory, search for closest word
+            neighbors, and calculate vector analogies.<br>
+            Select <strong>Training Hub</strong> to configure hyperparameters, choose your architectures, and initiate
+            new background training protocols on your datasets.
+        </p>
+        <nav>
+            <button id="tab-explorer" class="active" onclick="switchTab('explorer')">Model Explorer</button>
+            <button id="tab-training" onclick="switchTab('training')">Training Hub</button>
+        </nav>
+    </header>
+
+    <main class="dashboard-layout">
+        <div class="left-panel">
+            <section id="explorer-section" class="tab-content active">
+                <h2>Model Evaluation</h2>
+                <div class="control-group">
+                    <label>Select Model:</label>
+                    <div class="select-wrapper">
+                        <select id="model-select"></select>
+                    </div>
+                    <button id="load-model-btn" class="full-btn">Load into Memory</button>
+                </div>
+
+                <div id="explorer-tools" style="display: none;">
+                    <div class="query-box">
+                        <h3>Closest Neighbors</h3>
+                        <div class="input-row">
+                            <input type="text" id="target-word" placeholder="Target Word...">
+                            <button id="search-word-btn">Search</button>
+                        </div>
+                        <ul id="neighbors-list"></ul>
+                    </div>
+
+                    <div class="query-box">
+                        <h3>Analogy Calculator (A : B :: C : ?)</h3>
+                        <div class="analogy-row">
+                            <input type="text" id="word-a" placeholder="A"><span>:</span>
+                            <input type="text" id="word-b" placeholder="B"><span>::</span>
+                            <input type="text" id="word-c" placeholder="C">
+                        </div>
+                        <button id="calculate-analogy-btn" class="full-btn">Calculate</button>
+                        <div id="analogy-result"></div>
+                        <canvas id="analogy-canvas" width="400" height="250"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="training-section" class="tab-content">
+                <h2>Training Parameters</h2>
+                <div class="control-group">
+                    <label>Dataset:</label>
+                    <select id="dataset-select"></select>
+                </div>
+                <div class="hyperparams-grid">
+                    <label>Epochs<input type="number" id="train-ep" value="100"></label>
+                    <label>LR<input type="number" id="train-lr" step="0.001" value="0.025"></label>
+                    <label>Dim<input type="number" id="train-dim" value="50"></label>
+                    <label>Window<input type="number" id="train-win" value="5"></label>
+                    <label>Neg. Samples<input type="number" id="train-ns" value="5"></label>
+                </div>
+                <div class="control-group">
+                    <h3>Architectures</h3>
+                    <div class="arch-list">
+                        <label><input type="checkbox" class="arch-cb" value="Standard_CBOW"> Standard CBOW</label>
+                        <label><input type="checkbox" class="arch-cb" value="CBOW_with_Hierarchical_Softmax"> CBOW +
+                            Hierarchical Softmax</label>
+                        <label><input type="checkbox" class="arch-cb" value="CBOW_with_Negative_Sampling"> CBOW +
+                            Negative Sampling</label>
+                        <label><input type="checkbox" class="arch-cb" value="Standard_Skip-Gram"> Standard
+                            Skip-Gram</label>
+                        <label><input type="checkbox" class="arch-cb" value="Skip-Gram_with_Hierarchical_Softmax">
+                            Skip-Gram + Hierarchical Softmax</label>
+                        <label><input type="checkbox" class="arch-cb" value="Skip-Gram_with_Negative_Sampling">
+                            Skip-Gram + Negative Sampling</label>
+                    </div>
+                </div>
+                <button id="start-training-btn" class="full-btn">Start Training</button>
+                <div id="status-box">Status: <span id="status-text">Idle</span></div>
+            </section>
+        </div>
+
+        <div class="right-panel">
+            <h2>Current Rankings</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60%;">Configuration</th>
+                            <th>Sem.</th>
+                            <th>Syn.</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

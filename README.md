@@ -6,7 +6,7 @@
 * [Literature and References](#literature-and-references)
 * [Implementation Details](#implementation-details)
 * [Architectures Implemented](#architectures-implemented)
-* [Usage and Terminal UI](#usage-and-terminal-ui)
+* [Usage: Web Dashboard & Terminal UI](#usage-web-dashboard--terminal-ui)
 * [Testing Suite](#testing-suite)
 * [Evaluation and Analogy Testing](#evaluation-and-analogy-testing)
 * [Benchmark Results](#benchmark-results)
@@ -31,7 +31,7 @@ The development and mathematical derivations in this repository rely on two main
 * **Conceptual Understanding:** The core concepts behind the model and the resulting vector space properties are based on Tomas Mikolov's original Word2Vec publications:
   * Mikolov, T., Chen, K., Corrado, G., & Dean, J. (2013). *Efficient Estimation of Word Representations in Vector Space*. arXiv preprint arXiv:1301.3781.
   * Mikolov, T., Sutskever, I., Chen, K., Corrado, G. S., & Dean, J. (2013). *Distributed Representations of Words and Phrases and their Compositionality*. Advances in Neural Information Processing Systems, 26.
-* **Implementation Details:** The mathematical implementation closely follows Xin Rong's detailed breakdown. The equations provided in this paper were used directly to write the matrix updates and backpropagation steps across all model variants:
+* **Mathematical Implementation:** The explicit formulas for the loss functions, gradient derivations, backpropagation steps, and matrix updates used in this pure NumPy codebase are directly referenced (with numbers in the comments of the models) and derived from Xin Rong's detailed breakdown:
   * Rong, X. (2014). *word2vec Parameter Learning Explained*. arXiv preprint arXiv:1411.2738.
 
 ## Implementation Details
@@ -55,27 +55,29 @@ Located in `src/skip_gram/`:
 * `skip_gram_hier_softmax.py`: Skip-Gram with a binary Huffman Tree for Hierarchical Softmax.
 * `skip_gram_neg_sample.py`: Skip-Gram with Negative Sampling.
 
-## Usage and Terminal UI
-A centralized Terminal User Interface (UI) is provided to easily manage training and evaluation. 
+## Usage: Web Dashboard & Terminal UI
+This project offers two ways to interact with the models: a centralized Terminal UI and a full-featured, real-time Web Dashboard powered by Flask.
 
-To start the hub, execute:
-    python src/main.py
+### 1. Web Dashboard (GUI)
+To launch the interactive web interface, run:
+`python web/app.py`
 
-### Functionalities
-1. **Train New Models:** Allows selection of a specific text dataset from the `trainsets/` directory.
-   * Prompts for hyperparameter configuration (epochs, learning rate, window size, embedding dimension, negative sampling size).
-   * Supports a Batch Mode to sequentially train all 6 architectures automatically.
-   * Trained weights are saved to the `embeddings/` folder.
-2. **Evaluate Saved Models:** Loads saved `.txt` embedding matrices into memory.
-   * Prints the 5 closest-neighbors (most cosine similar) words to the one asked.
-   * Executes the standardized analogy benchmark (see the Evaluation and Analogy Testing section below for details).
-3. **Generate Markdown Report:** Compiles the analogy accuracy results from all trained models into a clean Markdown table.
+* **Model Explorer:** Load saved `.txt` embeddings into memory to interactively search for closest word neighbors. It includes an Analogy Calculator that projects high-dimensional vector math onto a 2D coordinate system using pure NumPy PCA for visual analysis.
+* **Training Hub:** Configure hyperparameters (Epochs, LR, Dimensions, Context Window, Negative Samples) and launch background training protocols across multiple architectures simultaneously.
+* **Live Leaderboard:** A real-time ranking table that automatically updates with semantic and syntactic accuracy scores as soon as background training threads complete their evaluation phase.
+
+### 2. Terminal UI
+To run the standard command-line hub, execute:
+`python src/run_training.py`
+
+* **Interactive Menus:** Prompts for dataset selection and hyperparameter configuration directly in the terminal.
+* **Batch Mode:** Sequentially train all 6 architectures automatically and log the results to the central metrics file.
 
 ## Testing Suite
 The repository includes a testing suite that validates the data processing pipeline, Huffman tree generation, and the exact calculations of the forward and backward passes. 
 
 To run the test suite locally, execute:
-    python run_tests.py
+`python run_tests.py`
 
 ## Evaluation and Analogy Testing
 The models are evaluated using the standard `word-test.v1.txt` dataset, originally introduced alongside the Word2Vec architecture in Mikolov's 2013 papers. The evaluation script (`evaluation.py`) processes the trained weight matrix (normalized to unit length) and tests the vector space for:
@@ -84,7 +86,8 @@ The models are evaluated using the standard `word-test.v1.txt` dataset, original
 
 ### Accuracy Calculation
 Vector offsets are computed using cosine similarity. For an analogy question such as "A is to B as C is to D", the target vector is calculated as:
-$Vector(B) - Vector(A) + Vector(C)$
+
+$$\vec{v}_{target} = \vec{v}_B - \vec{v}_A + \vec{v}_C$$
 
 The vocabulary is then searched for the vector mathematically closest to this result. If the closest word matches the target word D, it is marked as correct. If any of the four words in the analogy are missing from the model's vocabulary, the question is skipped. The final accuracy is calculated as the percentage of correctly answered, non-skipped analogies.
 
@@ -94,9 +97,19 @@ Below is the performance comparison of the different architectures tested on the
 <!-- BENCHMARK_TABLE_START -->
 | Dataset | Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
+| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
+| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
+| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
+| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
+| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
 | dummy | Skip-Gram with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 8.89% | 24 | 20.83% | 19475 | 13.04% |
 | dummy | Standard Skip-Gram | 50 | 0.025 | 10 | 4 | - | 45 | 11.11% | 24 | 16.67% | 19475 | 13.04% |
 | dummy | Skip-Gram with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 13.33% | 24 | 8.33% | 19475 | 11.59% |
+| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 40 | 4 | - | 45 | 11.11% | 24 | 12.50% | 19475 | 11.59% |
+| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 40 | 4 | - | 45 | 11.11% | 24 | 12.50% | 19475 | 11.59% |
+| dummy | Skip-Gram with Hierarchical Softmax | 100 | 0.025 | 50 | 5 | - | 45 | 8.89% | 24 | 8.33% | 19475 | 8.70% |
+| dummy | Skip-Gram with Negative Sampling | 100 | 0.025 | 50 | 5 | 5 | 45 | 8.89% | 24 | 8.33% | 19475 | 8.70% |
 | dummy | CBOW with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 0.00% | 24 | 16.67% | 19475 | 5.80% |
 | WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 4.25% | 7506 | 4.49% | 9334 | 4.43% |
 | dummy | CBOW with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
