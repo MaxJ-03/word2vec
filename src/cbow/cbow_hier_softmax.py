@@ -64,6 +64,7 @@ class CBOWHierarchical(Word2VecBase):
         for epoch in range(epochs):
 
             epoch_loss = 0
+            processed_samples = 0
             epoch_start_time = time.time()
             
             # Decay the learning rate to ensure smooth convergence as training progresses.
@@ -75,17 +76,22 @@ class CBOWHierarchical(Word2VecBase):
                 output_word_id = self.data_processing.data_id_to_word_id(i)
                 context_vector_ids, context_size = self.data_processing.one_hot_encoding_context_ids(i, self.context_size)
 
+                # Skip positions that have no context (e.g., single-token datasets).
+                if context_size == 0:
+                    continue
+
                 # Compute gradients and apply weight updates by traversing the Huffman tree.
                 loss = self.update_weights(output_word_id, context_vector_ids, context_size, huffman_dict)
 
                 # Accumulate the objective function loss to track model performance.
                 epoch_loss += loss
+                processed_samples += 1
 
                 if ((i + 1) % print_interval == 0): 
                     print(f'Epoch: {epoch + 1}, Trained first {i + 1} words of the dataset.')
 
             # Calculate the average loss over the entire dataset for the current epoch.
-            average_loss = epoch_loss / self.data_processing.data_length
+            average_loss = epoch_loss / max(processed_samples, 1)
             epoch_end_time = time.time()
             
             print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")

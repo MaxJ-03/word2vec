@@ -50,6 +50,7 @@ class CBOW(Word2VecBase):
         # Runs the training loop across the dataset for the specified number of epochs.
         for epoch in range(epochs):
             epoch_loss = 0
+            processed_samples = 0
             epoch_start_time = time.time()
 
             # Decay the learning rate to ensure smooth convergence as training progresses.
@@ -60,6 +61,10 @@ class CBOW(Word2VecBase):
                 # Extract the surrounding context words and the central target word for the current position.
                 context_vector_ids, context_size = self.data_processing.one_hot_encoding_context_ids(i, self.context_size)
                 output_word_id = self.data_processing.data_id_to_word_id(i)
+
+                # Skip positions that have no context (e.g., single-token datasets).
+                if context_size == 0:
+                    continue
                 
                 # Execute the forward and backward passes to learn the word representations.
                 predicted_vector = self.forward_pass(context_vector_ids, context_size)
@@ -67,12 +72,13 @@ class CBOW(Word2VecBase):
 
                 # Accumulate the cross-entropy loss to track model performance.
                 epoch_loss += -np.log(predicted_vector[output_word_id] + 1e-9)
+                processed_samples += 1
                 
                 if ((i + 1) % print_interval == 0): 
                     print(f'Epoch: {epoch + 1}, Trained first {i + 1} words of the dataset.')
 
             # Calculate the average loss over the entire dataset for the current epoch.
-            average_loss = epoch_loss / self.data_processing.data_length
+            average_loss = epoch_loss / max(processed_samples, 1)
             epoch_end_time = time.time()
             
             print(f"Epoch {epoch + 1}/{epochs} | LR: {self.learning_rate:.6f} | Average Loss: {average_loss:.4f} | Time: {(epoch_end_time - epoch_start_time):.2f}s")

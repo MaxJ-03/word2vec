@@ -1,6 +1,9 @@
 #file to store all tree related classes and methods
+import heapq
 
 class TreeNode:
+    __slots__ = ('word', 'frequency', 'left_child', 'right_child', 'id')
+
     def __init__(self, word, frequency=None, id=None):
         self.word = word
         self.frequency = frequency
@@ -39,42 +42,63 @@ class HuffmanTree:
         self.build_tree(TreeNode.transform_vocabulary_to_nodes(vocabulary, vocabulary_frequency))
     
     def build_tree(self, nodes):
-        counter = 0
-        #build the huffman tree using the nodes
-        while len(nodes) > 1:
-            # sort the nodes by frequency
-            nodes = sorted(nodes, key=lambda x: x.frequency)
-            #combine the two nodes with the lowest frequency
-            left_child = nodes[0]
-            right_child = nodes[1]
+        if not nodes:
+            self.root = None
+            return
+
+        # Min-heap turns repeated global sorts into O(V log V) total merging work.
+        heap = [(node.frequency, i, node) for i, node in enumerate(nodes)]
+        heapq.heapify(heap)
+
+        parent_id = 0
+        tie_breaker = len(heap)
+
+        while len(heap) > 1:
+            _, _, left_child = heapq.heappop(heap)
+            _, _, right_child = heapq.heappop(heap)
+
             parent_node = TreeNode(
-                word=None, 
-                frequency= left_child.frequency + right_child.frequency, 
-                id = counter) 
+                word=None,
+                frequency=left_child.frequency + right_child.frequency,
+                id=parent_id,
+            )
             parent_node.add_left_child(left_child)
             parent_node.add_right_child(right_child)
-            #remove the two nodes and add the parent node to the list of nodes
-            nodes = nodes[2:]
-            nodes.append(parent_node)
-            counter += 1
-        self.root = nodes[0]
+
+            heapq.heappush(heap, (parent_node.frequency, tie_breaker, parent_node))
+            parent_id += 1
+            tie_breaker += 1
+
+        self.root = heap[0][2]
 
     def convert_tree_to_dict(self, node, code=None, path=None, huffman_dict=None):
         if huffman_dict is None:
             huffman_dict = {}
-        if code is None:
-            code = []
-        if path is None:
-            path = []
-    
-        if node is not None:
-            if node.word is not None:
-                huffman_dict[node.word] = {
-                    'code': code,
-                    'path': path
+        if node is None:
+            return huffman_dict
+
+        initial_code = [] if code is None else code
+        initial_path = [] if path is None else path
+
+        # Iterative DFS avoids recursion overhead for large vocabularies.
+        stack = [(node, initial_code, initial_path)]
+
+        while stack:
+            current, current_code, current_path = stack.pop()
+
+            if current.word is not None:
+                huffman_dict[current.word] = {
+                    'code': current_code,
+                    'path': current_path
                 }
-            else:
-                self.convert_tree_to_dict(node.left_child, code + [1], path + [node.id],  huffman_dict)
-                self.convert_tree_to_dict(node.right_child, code + [-1], path + [node.id] , huffman_dict)
+                continue
+
+            next_path = current_path + [current.id]
+
+            # Push right first so left branch is processed first (same traversal order as recursion).
+            if current.right_child is not None:
+                stack.append((current.right_child, current_code + [-1], next_path))
+            if current.left_child is not None:
+                stack.append((current.left_child, current_code + [1], next_path))
 
         return huffman_dict

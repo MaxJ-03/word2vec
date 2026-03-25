@@ -61,3 +61,19 @@ class TestCBOW(unittest.TestCase):
             print(f"Train loop failed: {e}")
             
         self.assertTrue(execution_successful)
+
+    def test_train_single_token_dataset(self):
+        # Ensures training remains numerically stable when context is empty.
+        solo_file = "test_mock_cbow_single_token.txt"
+        try:
+            with open(solo_file, "w", encoding="utf-8") as f:
+                f.write("solo")
+
+            model = CBOW(solo_file, context_size=4, learning_rate=self.learning_rate, hidden_layer_size=self.N)
+            model.train(epochs=1, print_interval=10)
+
+            self.assertFalse(np.isnan(model.W1).any())
+            self.assertFalse(np.isnan(model.W2).any())
+        finally:
+            if os.path.exists(solo_file):
+                os.remove(solo_file)

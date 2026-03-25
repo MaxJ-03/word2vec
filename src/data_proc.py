@@ -113,7 +113,10 @@ class DataProcessing:
         return self.word_to_id[word]
 
     def create_negative_sampling_distribution(self):
-        modified_frequencies = np.array(list(self.vocabulary_frequency.values())) ** 0.75
+        # Build frequencies in vocabulary-id order so sampled ids map to the correct words.
+        modified_frequencies = np.array(
+            [self.vocabulary_frequency[word] for word in self.vocabulary], dtype=float
+        ) ** 0.75
         total_sum = np.sum(modified_frequencies)
         self.probability_distribution = modified_frequencies / total_sum
 

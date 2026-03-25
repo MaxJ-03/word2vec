@@ -48,3 +48,24 @@ class TestDataProcessing(unittest.TestCase):
         samples = self.dp.generate_negative_samples(target_id, num_samples=3)
         self.assertEqual(len(samples), 3)
         self.assertNotIn(target_id, samples)
+
+    def test_negative_sampling_distribution_matches_vocabulary_ids(self):
+        # Verifies sampling probabilities are aligned with word ids from sorted vocabulary.
+        file_path = "test_mock_distribution_alignment.txt"
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write("z a z b c")
+
+            dp = DataProcessing()
+            dp.load(file_path)
+
+            # Vocabulary is sorted: ['a', 'b', 'c', 'z'].
+            expected = np.array(
+                [dp.vocabulary_frequency[word] for word in dp.vocabulary], dtype=float
+            ) ** 0.75
+            expected /= expected.sum()
+
+            np.testing.assert_allclose(dp.probability_distribution, expected)
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
