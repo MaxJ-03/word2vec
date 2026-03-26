@@ -97,12 +97,16 @@ Below is the performance comparison of the different architectures tested on the
 <!-- BENCHMARK_TABLE_START -->
 | Dataset | Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
+| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
 | dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
 | dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
+| text8 | Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 8.60% | 10545 | 21.55% | 438 | 15.74% |
+| text8 | Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 8.60% | 10545 | 21.55% | 438 | 15.74% |
 | dummy | Skip-Gram with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 8.89% | 24 | 20.83% | 19475 | 13.04% |
 | dummy | Standard Skip-Gram | 50 | 0.025 | 10 | 4 | - | 45 | 11.11% | 24 | 16.67% | 19475 | 13.04% |
 | dummy | Skip-Gram with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 13.33% | 24 | 8.33% | 19475 | 11.59% |
@@ -115,6 +119,7 @@ Below is the performance comparison of the different architectures tested on the
 | dummy | CBOW with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
 | dummy | Standard CBOW | 50 | 0.025 | 10 | 4 | - | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
 | WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 80 | 4 | - | 2704 | 3.96% | 7506 | 3.73% | 9334 | 3.79% |
+| text8 | Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 2.35% | 10545 | 2.79% | 438 | 2.59% |
 | OutlineOfHistory | Skip-Gram with Hierarchical Softmax | 10 | 0.05 | 100 | 4 | - | 343 | 12.54% | 5795 | 1.17% | 13406 | 1.81% |
 | OutlineOfHistory | Skip-Gram with Hierarchical Softmax | 10 | 0.025 | 80 | 4 | - | 343 | 8.75% | 5795 | 1.26% | 13406 | 1.68% |
 | WikiText2train | CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 3.29% | 7506 | 1.03% | 9334 | 1.63% |
