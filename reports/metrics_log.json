@@ -358,5 +358,14 @@
         "syntactic_accuracy": 21.54575628259839,
         "total_accuracy": 15.74374542028682,
         "skipped": 438
+    },
+    {
+        "model_name": "text8_Skip-Gram_with_Hierarchical_Softmax_ep3_lr0.025_dim90_w4.txt",
+        "semantic_evaluated": 8561,
+        "semantic_accuracy": 13.176030837518981,
+        "syntactic_evaluated": 10545,
+        "syntactic_accuracy": 20.910384068278805,
+        "total_accuracy": 17.444781743954778,
+        "skipped": 438
     }
 ]
