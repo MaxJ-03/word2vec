@@ -12,13 +12,12 @@ class SkipGramNegativeSampling(Word2VecBase):
 
         self.negative_sampling_size = negative_sampling_size
 
-        # Calculate the boundary for Xavier/Glorot initialization to maintain variance across layers.
-        limit_w1 = np.sqrt(6 / (self.V + self.N))
-        self.W1 = np.random.uniform(-limit_w1, limit_w1, size=(self.V, self.N))
+        # Initialize input embedding matrix uniformly, scaled by the embedding dimension.
+        self.W1 = (np.random.rand(self.V, self.N) - 0.5) / self.N
         
-        limit_w2 = np.sqrt(6 / (self.V + self.N))
-        self.W2 = np.random.uniform(-limit_w2, limit_w2, size=(self.V, self.N))
-    
+        # Initialize output context matrix to zeros.
+        self.W2 = np.zeros((self.V, self.N))
+        
     def update_weights(self, input_vector_id, context_vector_ids):
         # Executes the forward and backward passes for the true context words and generated negative samples.
         

@@ -97,10 +97,13 @@ Below is the performance comparison of the different architectures tested on the
 <!-- BENCHMARK_TABLE_START -->
 | Dataset | Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
+| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 16.11% | 10545 | 22.78% | 438 | 19.79% |
 | text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
 | text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
+| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 90 | 4 | - | 8561 | 13.18% | 10545 | 20.91% | 438 | 17.44% |
+| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 90 | 4 | - | 8561 | 13.18% | 10545 | 20.91% | 438 | 17.44% |
 | dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
 | dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
 | dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |

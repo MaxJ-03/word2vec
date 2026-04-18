@@ -11,12 +11,11 @@ class SkipGramHierarchical(Word2VecBase):
         # W2 requires V-1 rows because a Huffman tree for V words has exactly V-1 internal nodes.
         super().__init__(data_path, context_size, learning_rate, hidden_layer_size)
 
-        # Calculate the boundary for Xavier/Glorot initialization to maintain variance across layers.
-        limit_w1 = np.sqrt(6 / (self.V + self.N))
-        self.W1 = np.random.uniform(-limit_w1, limit_w1, size=(self.V, self.N))
+        # Initialize input embedding matrix uniformly, scaled by the embedding dimension.
+        self.W1 = (np.random.rand(self.V, self.N) - 0.5) / self.N
         
-        limit_w2 = np.sqrt(6 / (self.V - 1 + self.N))
-        self.W2 = np.random.uniform(-limit_w2, limit_w2, size=(self.V - 1, self.N))
+        # Initialize internal node weights for the Huffman tree to zeros.
+        self.W2 = np.zeros((self.V - 1, self.N))
     
     def update_weights(self, input_vector_id, context_words, huffman_dict):
         # Executes the forward and backward passes by traversing the Huffman tree for each context word.

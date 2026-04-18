@@ -9,12 +9,11 @@ class CBOW(Word2VecBase):
         # Initializes the CBOW model parameters and applies Xavier initialization to the weight matrices.
         super().__init__(data_path, context_size, learning_rate, hidden_layer_size)
 
-        # Calculate the boundary for Xavier/Glorot initialization to maintain variance across layers.
-        limit_w1 = np.sqrt(6 / (self.V + self.N))
-        self.W1 = np.random.uniform(-limit_w1, limit_w1, size=(self.V, self.N))
+        # Initialize input embedding matrix uniformly, scaled by the embedding dimension to prevent vanishing weights.
+        self.W1 = (np.random.rand(self.V, self.N) - 0.5) / self.N
         
-        limit_w2 = np.sqrt(6 / (self.N + self.V))
-        self.W2 = np.random.uniform(-limit_w2, limit_w2, size=(self.N, self.V))
+        # Initialize output context matrix to zeros for stable initial predictions.
+        self.W2 = np.zeros((self.N, self.V))
 
     def forward_pass(self, context_word_ids, context_size):
         # Performs the forward propagation to generate the target word probability distribution.
