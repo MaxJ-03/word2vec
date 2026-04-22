@@ -200,6 +200,11 @@ The benchmark section is auto-generated from `reports/metrics_log.json` by `src/
 | CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 3.29% | 7506 | 1.03% | 9334 | 1.63% |
 | Skip-Gram with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 2.48% | 7506 | 0.56% | 9334 | 1.07% |
 | CBOW with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 0.22% | 7506 | 0.01% | 9334 | 0.07% |
+
+### Dataset: OutlineOfHistory
+| Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 343 | 2.92% | 5795 | 0.29% | 13406 | 0.44% |
 <!-- BENCHMARK_TABLE_END -->
 
 * **Architecture:** The specific Word2Vec optimization strategy employed.
