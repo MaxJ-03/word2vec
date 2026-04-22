@@ -6,9 +6,11 @@
 * [Literature and References](#literature-and-references)
 * [Implementation Details](#implementation-details)
 * [Architectures Implemented](#architectures-implemented)
+* [Datasets](#datasets)
 * [Usage: Web Dashboard & Terminal UI](#usage-web-dashboard--terminal-ui)
 * [Testing Suite](#testing-suite)
-* [Evaluation and Analogy Testing](#evaluation-and-analogy-testing)
+* [Analogy Testing](#analogy-testing)
+* [Evaluation, Architectural Insights, and Future Work](#evaluation-architectural-insights-and-future-work)
 * [Benchmark Results](#benchmark-results)
 
 ## Overview
@@ -55,24 +57,35 @@ Located in `src/skip_gram/`:
 * `skip_gram_hier_softmax.py`: Skip-Gram with a binary Huffman Tree for Hierarchical Softmax.
 * `skip_gram_neg_sample.py`: Skip-Gram with Negative Sampling.
 
+## Datasets
+The models were trained and evaluated on three distinct datasets to assess performance across different data scales and linguistic distributions:
+
+* **text8**: A large, widely used corpus of cleaned Wikipedia text. This dataset provides a robust environment with high vocabulary coverage, making it highly effective for learning generalized semantic and syntactic representations.
+* **WikiText2train**: A smaller, standard language modeling dataset. Due to its reduced size compared to text8, it offers lower vocabulary coverage for the evaluation benchmark, which results in a significantly higher rate of skipped questions and lower overall accuracy.
+* **dummy**: A synthetic, toy dataset consisting of highly repetitive sentences explicitly modeling analogy relationships (e.g., "athens is the capital of greece . paris is the capital of france ."). This dataset is utilized mainly for debugging purposes to verify that the models can successfully learn explicit, localized patterns without structural errors.
+
 ## Usage: Web Dashboard & Terminal UI
-This project offers two ways to interact with the models: a centralized Terminal UI and a full-featured, real-time Web Dashboard powered by Flask.
+This project offers two ways to interact with the models: a Terminal UI and a Web Dashboard.
 
 ### 1. Web Dashboard (GUI)
 To launch the interactive web interface, run:
-`python web/app.py`
+```bash
+python web/app.py
+ ```
 
 Before starting the dashboard, make sure the embedding files are fully downloaded (this repository stores large embedding files with Git LFS):
 
-`git lfs install`
-
-`git lfs pull --include="embeddings/*"`
+```bash
+git lfs install
+git lfs pull --include="embeddings/*"
+```
 
 Optional verification:
+```bash
+git lfs ls-files
+```
 
-`git lfs ls-files`
-
-If embeddings were not pulled and only LFS pointer files are present, model loading in the dashboard can fail and you may see a model-selection errors.
+If embeddings were not pulled and only LFS pointer files are present, model loading in the dashboard can fail and you may see model selection errors.
 
 * **Model Explorer:** Load saved `.txt` embeddings into memory to interactively search for closest word neighbors. It includes an Analogy Calculator that projects high-dimensional vector math onto a 2D coordinate system using pure NumPy PCA for visual analysis.
 * **Training Hub:** Configure hyperparameters (Epochs, LR, Dimensions, Context Window, Negative Samples) and launch background training protocols across multiple architectures simultaneously.
@@ -80,7 +93,9 @@ If embeddings were not pulled and only LFS pointer files are present, model load
 
 ### 2. Terminal UI
 To run the standard command-line hub, execute:
-`python src/run_training.py`
+``` bash
+python src/run_training.py
+```
 
 * **Interactive Menus:** Prompts for dataset selection and hyperparameter configuration directly in the terminal.
 * **Batch Mode:** Sequentially train all 6 architectures automatically and log the results to the central metrics file.
@@ -91,7 +106,7 @@ The repository includes a testing suite that validates the data processing pipel
 To run the test suite locally, execute:
 `python run_tests.py`
 
-## Evaluation and Analogy Testing
+## Analogy Testing
 The models are evaluated using the standard `word-test.v1.txt` dataset, originally introduced alongside the Word2Vec architecture in Mikolov's 2013 papers. The evaluation script (`evaluation.py`) processes the trained weight matrix (normalized to unit length) and tests the vector space for:
 * **Semantic accuracy** (e.g., Athens : Greece :: Oslo : Norway)
 * **Syntactic accuracy** (e.g., apparent : apparently :: rapid : rapidly)
@@ -102,6 +117,39 @@ Vector offsets are computed using cosine similarity. For an analogy question suc
 $$\vec{v}_{target} = \vec{v}_B - \vec{v}_A + \vec{v}_C$$
 
 The vocabulary is then searched for the vector mathematically closest to this result. If the closest word matches the target word D, it is marked as correct. If any of the four words in the analogy are missing from the model's vocabulary, the question is skipped. The final accuracy is calculated as the percentage of correctly answered, non-skipped analogies.
+
+## Evaluation, Architectural Insights, and Future Work
+
+The primary objective of this repository was to build, optimize, and mathematically verify Word2Vec from scratch using pure NumPy. The evaluation metrics derived from the standard analogy benchmark (detailed in the Benchmark Results below) revealed critical insights into how different architectural paradigms handle the geometry of language. 
+
+### Architectural Differences: Skip-Gram vs. CBOW
+Across all real-world text corpora evaluated (`text8` and `WikiText2train`), the Skip-Gram architecture exhibited an overwhelming dominance over the Continuous Bag-of-Words (CBOW) models. 
+* **The Averaging Penalty:** CBOW computes the hidden layer by averaging the one-hot encoded context vectors. While computationally lightweight, this operation fundamentally smooths over the exact sequential and distributional details of the text.
+* **Fine-Grained Signals:** Skip-Gram inverts this relationship, forcing the model to predict multiple distinct context words from a single input word. This structure injects a much higher volume of specific gradient updates per word pair, allowing the vector space to resolve highly specific semantic and syntactic analogies, peaking at nearly 20% accuracy on `text8`.
+
+### Optimization Dynamics: Hierarchical Softmax vs. Negative Sampling
+In the confines of this pure NumPy implementation, Hierarchical Softmax (HS) proved to be the more efficient and stable optimization strategy. 
+* The top-performing Skip-Gram configurations all utilized the Huffman tree routing, achieving higher accuracy in fewer epochs compared to Negative Sampling (NS). 
+* **Structural Bias:** The Huffman tree inherently places the most frequent vocabulary words near the root. This guarantees that the network frequently and reliably updates the internal node weights that govern the structural foundation of the language. Negative Sampling, reliant on stochastic draws, likely requires a higher number of training epochs or a dynamically tuned sampling distribution to converge to the same level of stability.
+
+### The Limits of Dimensionality
+Scaling the hidden layer directly impacts the model's degrees of freedom. The benchmarks confirm a positive, though non-linear, correlation between dimensionality and accuracy on adequately sized datasets. 
+* On the `text8` corpus, increasing the Skip-Gram dimension from 90 to 150 yielded a direct performance boost from 17.44% to 19.79%. 
+* However, evaluation on smaller or synthetic datasets (such as `dummy`) demonstrates the risk of over-parameterization. If the vector dimensionality is too high relative to the vocabulary density, the vectors spread too sparsely across the latent space, overfitting to noise and degrading the cosine similarity relationships.
+
+### Implementation Learnings
+Building a highly iterative machine learning algorithm in pure Python required aggressive architectural optimization to bypass the interpreter's overhead.
+
+* **Vectorization over Loops:** Native Python loops initially proved to be a massive bottleneck, particularly when calculating gradients for varying context windows and tree paths. By systematically replacing Python `for` loops with flattened arrays, `np.concatenate`, and unbuffered accumulations (`np.add.at`), almost all mathematical operations were successfully transferred to NumPy’s highly optimized C-backend.
+* **Iterative Tree Generation:** The construction and traversal of the Huffman Tree for Hierarchical Softmax was initially slow and memory-intensive due to recursive design patterns. This was resolved through two major optimizations: first, utilizing a Python `min-heap` to turn repeated global array sorts into highly efficient `O(V log V)` merging work. Second, the tree-to-dictionary conversion algorithm was rewritten to use an iterative Depth-First Search (DFS) with a manual stack. This entirely eliminates the function call overhead and prevents the interpreter from hitting recursion limits when processing massive vocabularies.
+* **Mathematical Verification:** Decoupling the analytical gradient computations from the network state updates allowed for the implementation of strict finite-difference numerical gradient checks. This mathematical proofing guarantees that the underlying matrix calculus is absolute and eliminates the risk of silent errors in the computations.
+
+### Limitations and Future Work
+While this codebase provides a mathematically verified baseline, time constraints naturally limited the scope of the evaluation. To push this implementation further, future work should focus on three main areas:
+
+1. **Comprehensive Hyperparameter Search:** The current benchmarks rely on manually selected configurations. To find the true performance ceiling of each architecture, the clear next step is to build an automated grid search to test different combinations of learning rates, decay factors, embedding dimensions, and negative sampling sizes.
+2. **Dataset Expansion:** The models are currently evaluated on a few standard datasets. Testing the architectures against a wider variety of domain-specific text will give a much clearer picture of where this Word2Vec implementation generalizes well and where it breaks down.
+3. **Subsampling Frequent Words:** The data pipeline currently processes every single token in the corpus. Adding Tomas Mikolov’s probabilistic subsampling to drop common, low-information words (like "the" or "is") would drastically speed up training times and help the model build better vectors for rare words.
 
 ## Benchmark Results
 Below is the performance comparison of the different architectures tested on the analogy benchmark (legend below the tables).
