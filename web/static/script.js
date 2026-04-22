@@ -5,55 +5,200 @@ function switchTab(t) {
     document.getElementById('tab-' + t).classList.add('active');
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    fetch('/api/models').then(r => r.json()).then(data => {
-        const s = document.getElementById('model-select');
-        data.forEach(m => {
-            let o = document.createElement('option');
-            o.value = m.filename; o.textContent = m.display_name;
-            s.appendChild(o);
-        });
+let loadedModelFilename = null;
+
+function setModelLoadMessage(message, level = "neutral") {
+    const messageBox = document.getElementById('model-load-message');
+    messageBox.textContent = message || "";
+    messageBox.classList.remove('error', 'success');
+    if (level === "error") messageBox.classList.add('error');
+    if (level === "success") messageBox.classList.add('success');
+}
+
+function setLoadButtonState(state) {
+    const button = document.getElementById('load-model-btn');
+
+    button.classList.remove('is-loaded');
+    button.disabled = false;
+
+    if (state === 'loading') {
+        button.textContent = 'Loading...';
+        button.disabled = true;
+        return;
+    }
+
+    if (state === 'loaded') {
+        button.textContent = 'Loaded!';
+        button.classList.add('is-loaded');
+        return;
+    }
+
+    button.textContent = 'Load into Memory';
+}
+
+function parseModelName(filename) {
+    return filename.endsWith('.txt') ? filename.slice(0, -4) : filename;
+}
+
+function populateModelSelect(models, leaderboardRows, selectedValue = null) {
+    const modelSelect = document.getElementById('model-select');
+    modelSelect.innerHTML = '';
+
+    const scoreByModel = new Map(
+        leaderboardRows
+            .filter(row => typeof row.model_name === 'string')
+            .map(row => [parseModelName(row.model_name), Number(row.total_accuracy) || 0])
+    );
+
+    const sortedModels = [...models].sort((a, b) => {
+        const scoreA = scoreByModel.get(parseModelName(a.filename));
+        const scoreB = scoreByModel.get(parseModelName(b.filename));
+
+        if (scoreA !== undefined && scoreB !== undefined) {
+            return scoreB - scoreA;
+        }
+
+        if (scoreA !== undefined) return -1;
+        if (scoreB !== undefined) return 1;
+
+        return a.display_name.localeCompare(b.display_name);
     });
 
-    fetch('/api/datasets').then(r => r.json()).then(data => {
-        const s = document.getElementById('dataset-select');
-        data.forEach(d => {
-            let o = document.createElement('option');
-            o.value = d; o.textContent = d;
-            s.appendChild(o);
-        });
+
+    if (!sortedModels.length) {
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = 'No models found in embeddings/';
+        modelSelect.appendChild(emptyOption);
+        return;
+    }
+
+    sortedModels.forEach(model => {
+        const option = document.createElement('option');
+        option.value = model.filename;
+        option.textContent = model.display_name;
+        modelSelect.appendChild(option);
     });
 
-    fetchLeaderboard();
+    if (selectedValue) {
+        const matching = sortedModels.find(model => model.filename === selectedValue);
+        if (matching) {
+            modelSelect.value = selectedValue;
+        }
+    }
+}
+
+async function refreshModelOrdering(selectedValue = null) {
+    const [modelsResponse, leaderboardResponse] = await Promise.all([
+        fetch('/api/models'),
+        fetch('/api/leaderboard')
+    ]);
+
+    const [models, leaderboard] = await Promise.all([
+        modelsResponse.json(),
+        leaderboardResponse.json()
+    ]);
+
+    populateModelSelect(models, leaderboard, selectedValue);
+    return leaderboard;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const [datasetsResponse, leaderboard] = await Promise.all([
+            fetch('/api/datasets'),
+            refreshModelOrdering()
+        ]);
+
+        const datasets = await datasetsResponse.json();
+        const datasetSelect = document.getElementById('dataset-select');
+
+        datasets.forEach(dataset => {
+            const option = document.createElement('option');
+            option.value = dataset;
+            option.textContent = dataset;
+            datasetSelect.appendChild(option);
+        });
+
+        fetchLeaderboard(leaderboard);
+    } catch (error) {
+        setModelLoadMessage('Failed to fetch initial dashboard data.', 'error');
+    }
+
     setInterval(checkStatus, 2000);
 });
 
-function fetchLeaderboard() {
-    fetch('/api/leaderboard').then(r => r.json()).then(data => {
-        const b = document.getElementById('leaderboard-body');
-        b.innerHTML = data.map(r => `<tr><td>${r.display_name}</td><td>${r.semantic_accuracy?.toFixed(1)}%</td><td>${r.syntactic_accuracy?.toFixed(1)}%</td><td><b>${r.total_accuracy?.toFixed(1)}%</b></td></tr>`).join('');
-    });
+function fetchLeaderboard(existingData = null) {
+    const renderLeaderboard = (rows) => {
+        const body = document.getElementById('leaderboard-body');
+        body.innerHTML = rows.map(row => `<tr><td>${row.display_name}</td><td>${row.semantic_accuracy?.toFixed(1)}%</td><td>${row.syntactic_accuracy?.toFixed(1)}%</td><td><b>${row.total_accuracy?.toFixed(1)}%</b></td></tr>`).join('');
+    };
+
+    if (existingData) {
+        renderLeaderboard(existingData);
+        return;
+    }
+
+    fetch('/api/leaderboard')
+        .then(response => response.json())
+        .then(data => renderLeaderboard(data));
 }
 
 function checkStatus() {
-    fetch('/api/status').then(r => r.json()).then(data => {
+    fetch('/api/status').then(r => r.json()).then(async data => {
         const span = document.getElementById('status-text');
         span.textContent = data.message;
         span.style.color = data.active ? "#3498db" : "#27ae60";
-        if (!data.active && data.message === "Training Complete!") fetchLeaderboard();
+
+        if (!data.active && data.message === "Training Complete!") {
+            const selectedFilename = document.getElementById('model-select').value;
+            const leaderboard = await refreshModelOrdering(selectedFilename || loadedModelFilename);
+            fetchLeaderboard(leaderboard);
+        }
     });
 }
 
-document.getElementById('load-model-btn').onclick = function () {
-    const f = document.getElementById('model-select').value;
-    if (!f) return;
-    this.textContent = "Loading...";
-    fetch('/api/load', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ filename: f }) })
-        .then(r => r.json()).then(() => {
-            document.getElementById('explorer-tools').style.display = 'block';
-            this.textContent = "Loaded!";
-            this.style.background = "#18bc9c";
+document.getElementById('model-select').addEventListener('change', function () {
+    if (loadedModelFilename && this.value !== loadedModelFilename) {
+        setLoadButtonState('default');
+        setModelLoadMessage('Selected model changed. Click "Load into Memory" to use it.');
+        document.getElementById('explorer-tools').style.display = 'none';
+    }
+});
+
+document.getElementById('load-model-btn').onclick = async function () {
+    const selectedFilename = document.getElementById('model-select').value;
+    if (!selectedFilename) {
+        setModelLoadMessage('No model is selected.', 'error');
+        return;
+    }
+
+    setLoadButtonState('loading');
+    setModelLoadMessage('');
+
+    try {
+        const response = await fetch('/api/load', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: selectedFilename })
         });
+
+        const payload = await response.json();
+
+        if (!response.ok || payload.error) {
+            throw new Error(payload.error || 'Failed to load model.');
+        }
+
+        loadedModelFilename = selectedFilename;
+        document.getElementById('explorer-tools').style.display = 'block';
+        setLoadButtonState('loaded');
+        setModelLoadMessage(`Loaded ${selectedFilename}.`, 'success');
+    } catch (error) {
+        loadedModelFilename = null;
+        document.getElementById('explorer-tools').style.display = 'none';
+        setLoadButtonState('default');
+        setModelLoadMessage(error.message, 'error');
+    }
 };
 
 document.getElementById('search-word-btn').onclick = function () {

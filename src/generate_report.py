@@ -1,6 +1,7 @@
 import os
 import json
 import re
+from collections import defaultdict
 from evaluate_saved_embed import LoadedEmbeddings, save_metrics_to_log
 from evaluation import evaluate_analogies
 
@@ -66,6 +67,56 @@ def update_readme_with_table(md_table_content, base_dir):
     else:
         print("Markers not found in README.md. Please add the start and end markers.")
 
+
+def build_markdown_tables_by_dataset(log_entries):
+    # Builds one benchmark table per dataset to keep results easier to inspect.
+    headers = [
+        "Architecture", "Epochs", "LR", "Dim", "Window", "NS",
+        "Sem. Eval", "Sem. Acc", "Syn. Eval", "Syn. Acc", "Skipped", "Total Acc"
+    ]
+
+    grouped_rows = defaultdict(list)
+
+    for res in log_entries:
+        model_name = res.get('model_name', 'Unknown')
+        dataset, arch, epochs, lr, dim, window, ns = parse_filename(model_name)
+
+        sem_eval = res.get('semantic_evaluated', 'N/A')
+        syn_eval = res.get('syntactic_evaluated', 'N/A')
+        sem_acc = f"{res.get('semantic_accuracy', 0):.2f}%"
+        syn_acc = f"{res.get('syntactic_accuracy', 0):.2f}%"
+        skipped = res.get('skipped', 'N/A')
+        tot_acc_value = res.get('total_accuracy', 0)
+        tot_acc = f"{tot_acc_value:.2f}%"
+
+        grouped_rows[dataset].append({
+            'sort_total_accuracy': tot_acc_value,
+            'row': [
+                arch, epochs, lr, dim, window, ns,
+                str(sem_eval), sem_acc, str(syn_eval), syn_acc, str(skipped), tot_acc
+            ]
+        })
+
+    # Order datasets by best run first for quick top-down inspection.
+    dataset_order = sorted(
+        grouped_rows.keys(),
+        key=lambda ds: max((entry['sort_total_accuracy'] for entry in grouped_rows[ds]), default=0),
+        reverse=True
+    )
+
+    sections = []
+    for dataset in dataset_order:
+        sections.append(f"### Dataset: {dataset}")
+        sections.append("| " + " | ".join(headers) + " |")
+        sections.append("|" + "|".join(["---"] * len(headers)) + "|")
+
+        for entry in sorted(grouped_rows[dataset], key=lambda x: x['sort_total_accuracy'], reverse=True):
+            sections.append("| " + " | ".join(entry['row']) + " |")
+
+        sections.append("")
+
+    return "\n".join(sections).strip()
+
 def generate_markdown_report_from_log():
     # Scans the embeddings directory, evaluates any models missing from the log,
     # generates a comprehensive Markdown comparison table sorted by accuracy, and updates the README.
@@ -121,34 +172,14 @@ def generate_markdown_report_from_log():
         print("No metrics available to generate a report.")
         return
 
-    log_data_sorted = sorted(log_data, key=lambda x: x['total_accuracy'], reverse=True)
+    # Keep only one entry per model name to avoid duplicate rows in the README.
+    deduplicated = {}
+    for entry in log_data:
+        model_name = entry.get('model_name', 'Unknown')
+        deduplicated[model_name] = entry
 
-    headers = [
-        "Dataset", "Architecture", "Epochs", "LR", "Dim", "Window", "NS",
-        "Sem. Eval", "Sem. Acc", "Syn. Eval", "Syn. Acc", "Skipped", "Total Acc"
-    ]
-    
-    md_table = "| " + " | ".join(headers) + " |\n"
-    md_table += "|" + "|".join(["---"] * len(headers)) + "|\n"
-    
-    for res in log_data_sorted:
-        model_name = res.get('model_name', 'Unknown')
-        dataset, arch, epochs, lr, dim, window, ns = parse_filename(model_name)
-        
-        sem_eval = res.get('semantic_evaluated', 'N/A')
-        syn_eval = res.get('syntactic_evaluated', 'N/A')
-        sem_acc = f"{res.get('semantic_accuracy', 0):.2f}%"
-        syn_acc = f"{res.get('syntactic_accuracy', 0):.2f}%"
-        skipped = res.get('skipped', 'N/A')
-        tot_acc = f"{res.get('total_accuracy', 0):.2f}%"
-        
-        row = [
-            dataset, arch, epochs, lr, dim, window, ns,
-            str(sem_eval), sem_acc, str(syn_eval), syn_acc, str(skipped), tot_acc
-        ]
-        md_table += "| " + " | ".join(row) + " |\n"
-
-    update_readme_with_table(md_table, base_dir)
+    md_tables = build_markdown_tables_by_dataset(list(deduplicated.values()))
+    update_readme_with_table(md_tables, base_dir)
 
 if __name__ == '__main__':
     generate_markdown_report_from_log()

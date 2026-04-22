@@ -62,6 +62,18 @@ This project offers two ways to interact with the models: a centralized Terminal
 To launch the interactive web interface, run:
 `python web/app.py`
 
+Before starting the dashboard, make sure the embedding files are fully downloaded (this repository stores large embedding files with Git LFS):
+
+`git lfs install`
+
+`git lfs pull --include="embeddings/*"`
+
+Optional verification:
+
+`git lfs ls-files`
+
+If embeddings were not pulled and only LFS pointer files are present, model loading in the dashboard can fail and you may see a model-selection errors.
+
 * **Model Explorer:** Load saved `.txt` embeddings into memory to interactively search for closest word neighbors. It includes an Analogy Calculator that projects high-dimensional vector math onto a 2D coordinate system using pure NumPy PCA for visual analysis.
 * **Training Hub:** Configure hyperparameters (Epochs, LR, Dimensions, Context Window, Negative Samples) and launch background training protocols across multiple architectures simultaneously.
 * **Live Leaderboard:** A real-time ranking table that automatically updates with semantic and syntactic accuracy scores as soon as background training threads complete their evaluation phase.
@@ -92,60 +104,56 @@ $$\vec{v}_{target} = \vec{v}_B - \vec{v}_A + \vec{v}_C$$
 The vocabulary is then searched for the vector mathematically closest to this result. If the closest word matches the target word D, it is marked as correct. If any of the four words in the analogy are missing from the model's vocabulary, the question is skipped. The final accuracy is calculated as the percentage of correctly answered, non-skipped analogies.
 
 ## Benchmark Results
-Below is the performance comparison of the different architectures tested on the analogy benchmark (legend below the table).
+Below is the performance comparison of the different architectures tested on the analogy benchmark (legend below the tables).
+
+The benchmark section is auto-generated from `reports/metrics_log.json` by `src/generate_report.py` and is split into separate tables per dataset (trainset) for easier inspection.
 
 <!-- BENCHMARK_TABLE_START -->
-| Dataset | Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 16.11% | 10545 | 22.78% | 438 | 19.79% |
-| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
-| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
-| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
-| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
-| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 90 | 4 | - | 8561 | 13.18% | 10545 | 20.91% | 438 | 17.44% |
-| text8 | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 90 | 4 | - | 8561 | 13.18% | 10545 | 20.91% | 438 | 17.44% |
-| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
-| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
-| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
-| dummy | Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
-| text8 | Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 8.60% | 10545 | 21.55% | 438 | 15.74% |
-| text8 | Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 8.60% | 10545 | 21.55% | 438 | 15.74% |
-| dummy | Skip-Gram with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 8.89% | 24 | 20.83% | 19475 | 13.04% |
-| dummy | Standard Skip-Gram | 50 | 0.025 | 10 | 4 | - | 45 | 11.11% | 24 | 16.67% | 19475 | 13.04% |
-| dummy | Skip-Gram with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 13.33% | 24 | 8.33% | 19475 | 11.59% |
-| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 40 | 4 | - | 45 | 11.11% | 24 | 12.50% | 19475 | 11.59% |
-| dummy | Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 40 | 4 | - | 45 | 11.11% | 24 | 12.50% | 19475 | 11.59% |
-| dummy | Skip-Gram with Hierarchical Softmax | 100 | 0.025 | 50 | 5 | - | 45 | 8.89% | 24 | 8.33% | 19475 | 8.70% |
-| dummy | Skip-Gram with Negative Sampling | 100 | 0.025 | 50 | 5 | 5 | 45 | 8.89% | 24 | 8.33% | 19475 | 8.70% |
-| dummy | CBOW with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 0.00% | 24 | 16.67% | 19475 | 5.80% |
-| WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 4.25% | 7506 | 4.49% | 9334 | 4.43% |
-| dummy | CBOW with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
-| dummy | Standard CBOW | 50 | 0.025 | 10 | 4 | - | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
-| WikiText2train | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 80 | 4 | - | 2704 | 3.96% | 7506 | 3.73% | 9334 | 3.79% |
-| text8 | Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 2.35% | 10545 | 2.79% | 438 | 2.59% |
-| OutlineOfHistory | Skip-Gram with Hierarchical Softmax | 10 | 0.05 | 100 | 4 | - | 343 | 12.54% | 5795 | 1.17% | 13406 | 1.81% |
-| OutlineOfHistory | Skip-Gram with Hierarchical Softmax | 10 | 0.025 | 80 | 4 | - | 343 | 8.75% | 5795 | 1.26% | 13406 | 1.68% |
-| WikiText2train | CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 3.29% | 7506 | 1.03% | 9334 | 1.63% |
-| text8 | Skip-Gram with Hierarchical Softmax | 1 | 0.05 | 150 | 4 | - | 8561 | 2.04% | 10545 | 1.20% | 438 | 1.58% |
-| text8 | Skip-Gram with Negative Sampling | 1 | 0.05 | 150 | 4 | 20 | 8561 | 1.59% | 10545 | 1.48% | 438 | 1.53% |
-| WikiText2train | Skip-Gram with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 2.48% | 7506 | 0.56% | 9334 | 1.07% |
-| OutlineOfHistory | Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 343 | 3.50% | 5795 | 0.72% | 13406 | 0.88% |
-| OutlineOfHistory | CBOW with Hierarchical Softmax | 10 | 0.05 | 100 | 4 | - | 343 | 3.21% | 5795 | 0.66% | 13406 | 0.80% |
-| OutlineOfHistory | Skip-Gram with Negative Sampling | 10 | 0.05 | 100 | 4 | 15 | 343 | 5.83% | 5795 | 0.45% | 13406 | 0.75% |
-| text8 | CBOW with Negative Sampling | 1 | 0.05 | 150 | 4 | 20 | 8561 | 0.69% | 10545 | 0.36% | 438 | 0.51% |
-| OutlineOfHistory | Skip-Gram with Negative Sampling | 10 | 0.025 | 80 | 4 | 15 | 343 | 5.25% | 5795 | 0.21% | 13406 | 0.49% |
-| OutlineOfHistory | CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 343 | 2.92% | 5795 | 0.29% | 13406 | 0.44% |
-| OutlineOfHistory | CBOW with Hierarchical Softmax | 10 | 0.025 | 80 | 4 | - | 343 | 1.75% | 5795 | 0.33% | 13406 | 0.41% |
-| OutlineOfHistory | Skip-Gram with Negative Sampling | 3 | 0.025 | 100 | 4 | 20 | 343 | 1.75% | 5795 | 0.05% | 13406 | 0.15% |
-| text8 | CBOW with Negative Sampling | 1 | 0.025 | 70 | 4 | 20 | 8561 | 0.18% | 10545 | 0.11% | 438 | 0.14% |
-| WikiText2train | CBOW with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 0.22% | 7506 | 0.01% | 9334 | 0.07% |
-| OutlineOfHistory | CBOW with Negative Sampling | 3 | 0.025 | 100 | 4 | 20 | 343 | 0.00% | 5795 | 0.02% | 13406 | 0.02% |
-| OutlineOfHistory | CBOW with Negative Sampling | 10 | 0.05 | 100 | 4 | 15 | 343 | 0.00% | 5795 | 0.02% | 13406 | 0.02% |
-| OutlineOfHistory | CBOW with Negative Sampling | 10 | 0.025 | 80 | 4 | 15 | 343 | 0.00% | 5795 | 0.00% | 13406 | 0.00% |
+### Dataset: text8
+| Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 16.11% | 10545 | 22.78% | 438 | 19.79% |
+| Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 150 | 4 | - | 8561 | 15.96% | 10545 | 22.69% | 438 | 19.67% |
+| Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 90 | 4 | - | 8561 | 13.18% | 10545 | 20.91% | 438 | 17.44% |
+| Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 90 | 4 | - | 8561 | 13.18% | 10545 | 20.91% | 438 | 17.44% |
+| Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 8.60% | 10545 | 21.55% | 438 | 15.74% |
+| Skip-Gram with Negative Sampling | 3 | 0.025 | 90 | 4 | 20 | 8561 | 8.60% | 10545 | 21.55% | 438 | 15.74% |
+| Skip-Gram with Hierarchical Softmax | 1 | 0.05 | 150 | 4 | - | 8561 | 2.04% | 10545 | 1.20% | 438 | 1.58% |
+| Skip-Gram with Negative Sampling | 1 | 0.05 | 150 | 4 | 20 | 8561 | 1.59% | 10545 | 1.48% | 438 | 1.53% |
+| CBOW with Negative Sampling | 1 | 0.05 | 150 | 4 | 20 | 8561 | 0.69% | 10545 | 0.36% | 438 | 0.51% |
+| CBOW with Negative Sampling | 1 | 0.025 | 70 | 4 | 20 | 8561 | 0.18% | 10545 | 0.11% | 438 | 0.14% |
 
+### Dataset: dummy
+| Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
+| Skip-Gram with Negative Sampling | 40 | 0.025 | 40 | 4 | 5 | 45 | 13.33% | 24 | 29.17% | 19475 | 18.84% |
+| Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
+| Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
+| Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 10 | 3 | - | 45 | 11.11% | 24 | 25.00% | 19475 | 15.94% |
+| Skip-Gram with Negative Sampling | 40 | 0.025 | 10 | 3 | 5 | 45 | 6.67% | 24 | 33.33% | 19475 | 15.94% |
+| Skip-Gram with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 8.89% | 24 | 20.83% | 19475 | 13.04% |
+| Standard Skip-Gram | 50 | 0.025 | 10 | 4 | - | 45 | 11.11% | 24 | 16.67% | 19475 | 13.04% |
+| Skip-Gram with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 13.33% | 24 | 8.33% | 19475 | 11.59% |
+| Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 40 | 4 | - | 45 | 11.11% | 24 | 12.50% | 19475 | 11.59% |
+| Skip-Gram with Hierarchical Softmax | 40 | 0.025 | 40 | 4 | - | 45 | 11.11% | 24 | 12.50% | 19475 | 11.59% |
+| Standard CBOW | 100 | 0.025 | 50 | 5 | - | 45 | 2.22% | 24 | 29.17% | 19475 | 11.59% |
+| Skip-Gram with Hierarchical Softmax | 100 | 0.025 | 50 | 5 | - | 45 | 8.89% | 24 | 8.33% | 19475 | 8.70% |
+| Skip-Gram with Negative Sampling | 100 | 0.025 | 50 | 5 | 5 | 45 | 8.89% | 24 | 8.33% | 19475 | 8.70% |
+| CBOW with Hierarchical Softmax | 50 | 0.025 | 10 | 4 | - | 45 | 0.00% | 24 | 16.67% | 19475 | 5.80% |
+| CBOW with Negative Sampling | 50 | 0.025 | 10 | 4 | 5 | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
+| Standard CBOW | 50 | 0.025 | 10 | 4 | - | 45 | 4.44% | 24 | 4.17% | 19475 | 4.35% |
+
+### Dataset: WikiText2train
+| Architecture | Epochs | LR | Dim | Window | NS | Sem. Eval | Sem. Acc | Syn. Eval | Syn. Acc | Skipped | Total Acc |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 4.25% | 7506 | 4.49% | 9334 | 4.43% |
+| Skip-Gram with Hierarchical Softmax | 3 | 0.025 | 80 | 4 | - | 2704 | 3.96% | 7506 | 3.73% | 9334 | 3.79% |
+| CBOW with Hierarchical Softmax | 3 | 0.025 | 100 | 4 | - | 2704 | 3.29% | 7506 | 1.03% | 9334 | 1.63% |
+| Skip-Gram with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 2.48% | 7506 | 0.56% | 9334 | 1.07% |
+| CBOW with Negative Sampling | 3 | 0.025 | 100 | 4 | 10 | 2704 | 0.22% | 7506 | 0.01% | 9334 | 0.07% |
 <!-- BENCHMARK_TABLE_END -->
 
-* **Dataset:** The text corpus used for training (e.g., `text8`, `dummy`).
 * **Architecture:** The specific Word2Vec optimization strategy employed.
 * **Epochs:** The number of complete passes through the training dataset.
 * **LR (Learning Rate):** The initial learning rate provided before exponential decay.

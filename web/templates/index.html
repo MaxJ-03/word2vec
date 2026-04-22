@@ -9,17 +9,21 @@
 
 <body>
     <header>
-        <h1>Word2Vec Control Hub</h1>
-        <p class="header-subtitle">
-            Use the two buttons below to navigate the dashboard.<br>
-            Select <strong>Model Explorer</strong> to load saved embeddings into memory, search for closest word
-            neighbors, and calculate vector analogies.<br>
-            Select <strong>Training Hub</strong> to configure hyperparameters, choose your architectures, and initiate
-            new background training protocols on your datasets.
-        </p>
-        <nav>
-            <button id="tab-explorer" class="active" onclick="switchTab('explorer')">Model Explorer</button>
-            <button id="tab-training" onclick="switchTab('training')">Training Hub</button>
+        <div class="hero-wrapper">
+            <h1>Word2Vec Control Hub</h1>
+            <p class="header-subtitle">A single dashboard for inspecting saved embeddings and running new experiments.
+            </p>
+        </div>
+        <nav class="nav-buttons">
+            <button id="tab-explorer" class="nav-card active" onclick="switchTab('explorer')">
+                <h3>Model Explorer</h3>
+                <p>Select to load saved embeddings, search for closest word neighbors, and calculate vector analogies.
+                </p>
+            </button>
+            <button id="tab-training" class="nav-card" onclick="switchTab('training')">
+                <h3>Training Hub</h3>
+                <p>Select to configure hyperparameters and architectures and initiate new training runs</p>
+            </button>
         </nav>
     </header>
 
@@ -33,6 +37,7 @@
                         <select id="model-select"></select>
                     </div>
                     <button id="load-model-btn" class="full-btn">Load into Memory</button>
+                    <div id="model-load-message" class="inline-message" aria-live="polite"></div>
                 </div>
 
                 <div id="explorer-tools" style="display: none;">
