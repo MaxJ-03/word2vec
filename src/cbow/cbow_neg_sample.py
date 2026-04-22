@@ -17,9 +17,9 @@ class CBOWNegativeSampling(Word2VecBase):
         # Initialize output context matrix to zeros.
         self.W2 = np.zeros((self.V, self.N))
 
-    def update_weights(self, output_word_id, context_vector_ids, context_size):
-        # Executes the forward and backward passes simultaneously for the true target and negative samples.
-        
+    def compute_gradients(self, output_word_id, context_vector_ids, context_size):
+        # Calculates loss and analytical gradients for the true target and negative samples.
+
         # Aggregate the input context vectors by calculating their average to form the hidden layer.
         h = np.sum(self.W1[context_vector_ids], axis=0) / context_size # (Eq. 18)
         
@@ -40,8 +40,7 @@ class CBOWNegativeSampling(Word2VecBase):
         # Backpropagate the error to the hidden layer accumulator.
         EH += gradient_true * v_true # (Eq. 59)
 
-        # Update the output vector weights for the true target word.
-        self.W2[output_word_id] -= self.learning_rate * gradient_true * h # (Eq. 58)
+        dW2_true = gradient_true * h
 
         # Generate negative samples to serve as incorrect target classes.
         negative_ids = self.data_processing.generate_negative_samples(output_word_id, self.negative_sampling_size)
@@ -59,11 +58,25 @@ class CBOWNegativeSampling(Word2VecBase):
         # Backpropagate the error from the negative samples to the hidden layer accumulator.
         EH += np.dot(gradient_neg, v_neg) # (Eq. 59)
 
+        dW2_neg = np.outer(gradient_neg, h)
+
+        dW1 = (1 / context_size) * EH
+        
+        return loss, dW2_true, dW2_neg, dW1, negative_ids
+
+    def update_weights(self, output_word_id, context_vector_ids, context_size):
+        # Executes the forward and backward passes simultaneously for the true target and negative samples.
+        
+        loss, dW2_true, dW2_neg, dW1, negative_ids = self.compute_gradients(output_word_id, context_vector_ids, context_size)
+
+         # Update the output vector weights for the true target word.
+        self.W2[output_word_id] -= self.learning_rate * dW2_true # (Eq. 58)
+
         # Update the output vector weights for all selected negative samples.
-        np.add.at(self.W2, negative_ids, -self.learning_rate * np.outer(gradient_neg, h)) # (Eq. 58)
+        np.add.at(self.W2, negative_ids, -self.learning_rate * dW2_neg) # (Eq. 58)
     
         # Update the input-to-hidden weights specifically for the context words used in the current sample.
-        np.add.at(self.W1, context_vector_ids, -(self.learning_rate / context_size) * EH) # (Eq. 60)
+        np.add.at(self.W1, context_vector_ids, -self.learning_rate * dW1) # (Eq. 60)
 
         return loss
 

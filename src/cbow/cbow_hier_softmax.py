@@ -16,10 +16,10 @@ class CBOWHierarchical(Word2VecBase):
         
         # Initialize internal node weights for the Huffman tree to zeros.
         self.W2 = np.zeros((self.V - 1, self.N))
-    
-    def update_weights(self, output_word_id, context_vector_ids, context_size, huffman_dict):
-        # Executes the forward and backward passes traversing the Huffman tree.
-        
+
+    def compute_gradients(self, output_word_id, context_vector_ids, context_size, huffman_dict):
+        # Calculates loss and analytical gradients for the internal nodes along the Huffman tree path.
+
         # Aggregate the input context vectors by calculating their average to form the hidden layer.
         h = np.sum(self.W1[context_vector_ids], axis=0) / context_size # (Eq. 18)
 
@@ -42,12 +42,22 @@ class CBOWHierarchical(Word2VecBase):
 
         # Backpropagate the error from the internal nodes to the hidden layer accumulator.
         EH = np.dot(gradient, v) # (Eq. 42)
+        dW2 = np.outer(gradient, h) # (Eq. 41)
+        dW1 = (1 / context_size) * EH # (Eq. 44)
+
+        return loss, dW2, dW1, path
+
+    
+    def update_weights(self, output_word_id, context_vector_ids, context_size, huffman_dict):
+        # Executes the forward and backward passes traversing the Huffman tree.
+        
+        loss, dW2, dW1, path = self.compute_gradients(output_word_id, context_vector_ids, context_size, huffman_dict)
 
         # Update the weight vectors of the internal nodes along the target path.
-        self.W2[path] -= self.learning_rate * np.outer(gradient, h) # (Eq. 43)
+        self.W2[path] -= self.learning_rate * dW2 # (Eq. 43)
     
         # Update the input-to-hidden weights specifically for the context words used.
-        np.add.at(self.W1, context_vector_ids, -(self.learning_rate / context_size) * EH) # (Eq. 44)
+        np.add.at(self.W1, context_vector_ids, -self.learning_rate * dW1) # (Eq. 44)
 
         return loss
 

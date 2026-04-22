@@ -29,21 +29,36 @@ class CBOW(Word2VecBase):
         
         return self.y_pred
     
-    def backpropagation(self, output_word_id, context_word_ids, context_size):
-        # Computes the prediction error and updates the network weights via gradient descent.
+    def compute_gradients(self, output_word_id, context_word_ids, context_size):
+
+        # Calculates the forward pass, loss, and analytical gradients without updating weights.
         
+        y_pred = self.forward_pass(context_word_ids, context_size)
+        loss = -np.log(y_pred[output_word_id] + 1e-9)
+
         # Determine the difference between the predicted distribution and the actual target word.
-        e = self.y_pred.copy() # e_j = y_j - t_j (Eq. 21)
+        e = y_pred # e_j = y_j - t_j (Eq. 21)
         e[output_word_id] -= 1
 
         # Backpropagate the error from the output layer to the hidden layer.
         EH = np.dot(self.W2, e) # dE/dh = sum(e_j * v'_w_j) (Eq. 24)
+        dW2 = np.outer(self.h, e) 
+        dW1 = (1 / context_size) * EH
+    
+        return loss, dW2, dW1
+    
+    def backpropagation(self, output_word_id, context_word_ids, context_size):
+        # Computes the prediction error and updates the network weights via gradient descent.
+
+        loss, dW2, dW1 = self.compute_gradients(output_word_id, context_word_ids, context_size)
 
         # Update the hidden-to-output weights based on the hidden state and prediction error.
-        self.W2 -= self.learning_rate * np.outer(self.h, e) # v'_w_j(new) = v'_w_j(old) - learning_rate * e_j * h (Eq. 23)
+        self.W2 -= self.learning_rate * dW2 # v'_w_j(new) = v'_w_j(old) - learning_rate * e_j * h (Eq. 23)
 
         # Update the input-to-hidden weights specifically for the context words used in the current sample.
-        np.add.at(self.W1, context_word_ids, -(self.learning_rate / context_size) * EH) # v_w_I,c(new) = v_w_I,c(old) - (learning_rate / C) * dE/dh (Eq. 25)
+        np.add.at(self.W1, context_word_ids, -self.learning_rate * dW1) # v_w_I,c(new) = v_w_I,c(old) - (learning_rate / C) * dE/dh (Eq. 25)
+
+        return loss
 
     def train(self, epochs, print_interval=100000):
         # Runs the training loop across the dataset for the specified number of epochs.
@@ -66,11 +81,10 @@ class CBOW(Word2VecBase):
                     continue
                 
                 # Execute the forward and backward passes to learn the word representations.
-                predicted_vector = self.forward_pass(context_vector_ids, context_size)
-                self.backpropagation(output_word_id, context_vector_ids, context_size)
+                loss = self.backpropagation(output_word_id, context_vector_ids, context_size)
 
                 # Accumulate the cross-entropy loss to track model performance.
-                epoch_loss += -np.log(predicted_vector[output_word_id] + 1e-9)
+                epoch_loss += loss
                 processed_samples += 1
                 
                 if ((i + 1) % print_interval == 0): 

@@ -16,10 +16,10 @@ class SkipGramHierarchical(Word2VecBase):
         
         # Initialize internal node weights for the Huffman tree to zeros.
         self.W2 = np.zeros((self.V - 1, self.N))
-    
-    def update_weights(self, input_vector_id, context_words, huffman_dict):
-        # Executes the forward and backward passes by traversing the Huffman tree for each context word.
-        
+
+    def compute_gradients(self, input_vector_id, context_words, huffman_dict):
+        # Calculates loss and analytical gradients by traversing the Huffman tree for each context word.
+
         # Extract the hidden layer representation directly from the input word matrix.
         h = self.W1[input_vector_id] # (Eq. 27)
         
@@ -27,34 +27,46 @@ class SkipGramHierarchical(Word2VecBase):
         EH = np.zeros(self.N)
         loss = 0
 
-        # In Skip-Gram, we must predict each context word independently using the central input word.
-        for target_word in context_words:
             
-            # Extract the Huffman tree path and corresponding routing codes for the current context word.
-            node = huffman_dict[target_word]
-            code = np.array(node['code'])
-            path = node['path']
+        # Extract the paths and codes for all context words.
+        paths = [huffman_dict[w]['path'] for w in context_words]
+        codes = [huffman_dict[w]['code'] for w in context_words]
 
-            # Retrieve the weight vectors for the internal nodes along the path.
-            v = self.W2[path]
+        # Flatten the paths and codes to process all nodes across all context words in one batch.
+        flat_paths = np.concatenate(paths)
+        flat_codes = np.concatenate(codes)
+
+        # Retrieve the weight vectors for the internal nodes along the path.
+        v = self.W2[flat_paths]
             
-            # Calculate the activation probabilities along the Huffman tree path.
-            f = Functions.sigmoid(code * np.dot(v, h))
+        # Calculate the activation probabilities along the Huffman tree path.
+        f = Functions.sigmoid(flat_codes * np.dot(v, h))
 
-            # Accumulate the log loss for the path traversal.
-            loss -= np.sum(np.log(f + 1e-9)) # (Eq. 51)
+        # Accumulate the log loss for the path traversal.
+        loss -= np.sum(np.log(f + 1e-9)) # (Eq. 51)
             
-            # Calculate the gradient for the internal nodes along the path.
-            gradient = code * (f - 1) # (Eq. 40)
+        # Calculate the gradient for the internal nodes along the path.
+        gradient = flat_codes * (f - 1) # (Eq. 40)
 
-            # Backpropagate the error from the internal nodes to the hidden layer accumulator.
-            EH += np.dot(gradient, v) # (Eq. 42)
+        # Backpropagate the error from the internal nodes to the hidden layer accumulator.
+        EH += np.dot(gradient, v) # (Eq. 42)
 
-            # Update the weight vectors of the internal nodes along the target path.
-            self.W2[path] -= self.learning_rate * np.outer(gradient, h) # (Eq. 43)
+        dW2 = np.outer(gradient, h)
+
+        dW1 = EH 
+
+        return loss, dW2, dW1, flat_paths
     
-        # Update the input-to-hidden weight for the central input word based on the accumulated error from all context words.
-        self.W1[input_vector_id] -= self.learning_rate * EH # (Eq. 52)
+    def update_weights(self, input_vector_id, context_words, huffman_dict):
+        # Executes the forward and backward passes by traversing the Huffman tree for each context word.
+        
+        loss, dW2, dW1, flat_paths = self.compute_gradients(input_vector_id, context_words, huffman_dict)
+        
+        # Accumulate the updates for all internal nodes.
+        np.add.at(self.W2, flat_paths, -self.learning_rate * dW2) # (Eq. 43)
+            
+        # Update the input-to-hidden weight for the central input word.
+        self.W1[input_vector_id] -= self.learning_rate * dW1 # (Eq. 52)
 
         return loss
 
@@ -80,6 +92,10 @@ class SkipGramHierarchical(Word2VecBase):
                 # Extract the central input word and the surrounding target context words.
                 input_vector_id = self.data_processing.data_id_to_word_id(i)
                 context_words, context_size = self.data_processing.one_hot_encoding_context_words(i, self.context_size)
+
+                # Skip if there are no context words.
+                if context_size == 0:
+                    continue
 
                 # Compute gradients and apply weight updates by traversing the Huffman tree for each target.
                 loss = self.update_weights(input_vector_id, context_words, huffman_dict)

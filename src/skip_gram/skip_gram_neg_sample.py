@@ -17,10 +17,10 @@ class SkipGramNegativeSampling(Word2VecBase):
         
         # Initialize output context matrix to zeros.
         self.W2 = np.zeros((self.V, self.N))
-        
-    def update_weights(self, input_vector_id, context_vector_ids):
-        # Executes the forward and backward passes for the true context words and generated negative samples.
-        
+
+    def compute_gradients(self, input_vector_id, context_vector_ids):
+        # Calculates loss and analytical gradients for the true context words and generated negative samples.
+
         # Extract the hidden layer representation directly from the input word matrix.
         h = self.W1[input_vector_id] # (Eq. 27)
         
@@ -41,8 +41,7 @@ class SkipGramNegativeSampling(Word2VecBase):
         # Backpropagate the error to the hidden layer accumulator.
         EH += np.dot(gradient_true, v_true) # (Eq. 59)
 
-        # Update the output vector weights for the true context words.
-        np.add.at(self.W2, context_vector_ids, -self.learning_rate * np.outer(gradient_true, h)) # (Eq. 58)
+        dW2_true = np.outer(gradient_true, h)
 
         # Generate negative samples to serve as incorrect context classes.
         negative_ids = self.data_processing.generate_negative_samples_list(context_vector_ids, self.negative_sampling_size)
@@ -60,11 +59,25 @@ class SkipGramNegativeSampling(Word2VecBase):
         # Backpropagate the error from the negative samples to the hidden layer accumulator.
         EH += np.dot(gradient_neg, v_neg) # (Eq. 59)
 
+        dW2_neg = np.outer(gradient_neg, h)
+
+        dW1 = EH
+
+        return loss, dW2_true, dW2_neg, dW1, negative_ids
+
+    def update_weights(self, input_vector_id, context_vector_ids):
+        # Executes the forward and backward passes for the true context words and generated negative samples.
+        
+        loss, dW2_true, dW2_neg, dW1, negative_ids = self.compute_gradients(input_vector_id, context_vector_ids)
+
+        # Update the output vector weights for the true context words.
+        np.add.at(self.W2, context_vector_ids, -self.learning_rate * dW2_true) # (Eq. 58)
+
         # Update the output vector weights for all selected negative samples.
-        np.add.at(self.W2, negative_ids, -self.learning_rate * np.outer(gradient_neg, h)) # (Eq. 58)
+        np.add.at(self.W2, negative_ids, -self.learning_rate * dW2_neg) # (Eq. 58)
 
         # Update the input-to-hidden weight for the central input word.
-        self.W1[input_vector_id] -= self.learning_rate * EH # (Eq. 60)
+        self.W1[input_vector_id] -= self.learning_rate * dW1 # (Eq. 60)
 
         return loss
 
@@ -83,6 +96,10 @@ class SkipGramNegativeSampling(Word2VecBase):
                 # Extract the central input word and the surrounding target context words.
                 input_vector_id = self.data_processing.data_id_to_word_id(i)
                 context_vectors, context_size = self.data_processing.one_hot_encoding_context_ids(i, self.context_size)
+
+                # Skip if there are no context words.
+                if context_size == 0:
+                    continue
 
                 # Compute gradients and apply weight updates for the current sample.
                 loss = self.update_weights(input_vector_id, context_vectors)
