@@ -304,14 +304,5 @@
         "syntactic_accuracy": 29.166666666666668,
         "total_accuracy": 11.594202898550725,
         "skipped": 19475
-    },
-    {
-        "model_name": "OutlineOfHistory_CBOW_with_Hierarchical_Softmax_ep3_lr0.025_dim100_w4",
-        "semantic_evaluated": 343,
-        "semantic_accuracy": 2.9154518950437316,
-        "syntactic_evaluated": 5795,
-        "syntactic_accuracy": 0.29335634167385677,
-        "total_accuracy": 0.43988269794721413,
-        "skipped": 13406
     }
 ]
